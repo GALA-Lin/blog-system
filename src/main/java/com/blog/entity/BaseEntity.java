@@ -16,11 +16,6 @@ import lombok.Data;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-/**
- * 基础实体类 - 所有实体类都需要继承此类
- *
- * @author GALA_Lin
- */
 @Data
 public abstract class BaseEntity implements Serializable {
 

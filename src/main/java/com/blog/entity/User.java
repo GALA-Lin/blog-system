@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 /**
  * @Author: GALA_Lin
  * @Date: 2025-10-06-14:35
- * @Description:
+ * @Description: User实体类
  */
 
 @Data
