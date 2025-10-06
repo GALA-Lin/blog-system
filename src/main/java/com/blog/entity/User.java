@@ -1,6 +1,7 @@
 package com.blog.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.blog.entity.base.BaseEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -17,7 +18,6 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = true)
 @TableName("users")
 public class User extends BaseEntity {
-
     private String username;
 
     private String email;

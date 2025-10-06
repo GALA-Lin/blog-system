@@ -1,4 +1,4 @@
-package com.blog.entity;
+package com.blog.entity.base;
 
 /**
  * @Author: GALA_Lin
