@@ -67,6 +67,7 @@ public class Result<T> implements Serializable {
         return result;
     }
 
+
     public static <T> Result<T> error(ResultCode resultCode) {
         Result<T> result = new Result<>();
         result.setCode(resultCode.getCode());
