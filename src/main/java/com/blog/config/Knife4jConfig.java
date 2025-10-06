@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * @Author: GALA_Lin
  * @Date: 2025-10-06-17:24
- * @Description:
+ * @Description: API文档配置
  */
 @Configuration
 public class Knife4jConfig {
@@ -23,7 +23,7 @@ public class Knife4jConfig {
                 .info(new Info()
                         .title("Blog System API Documentation")
                         .version("1.0.0")
-                        .description("Modern Blog System built with Spring Boot 3.x")
+                        .description("Modern Blog System built with Spring Boot 3.2.0")
                         .contact(new Contact()
                                 .name("GALA_Lin")
                                 .email("gala_lin@outlook.com")
@@ -40,4 +40,5 @@ public class Knife4jConfig {
                                 .name("Authorization")))
                 .addSecurityItem(new SecurityRequirement()
                         .addList("bearer-jwt"));
+    }
 }

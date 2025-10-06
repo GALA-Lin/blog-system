@@ -1,19 +1,29 @@
 package com.blog.config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
  * @Author: GALA_Lin
  * @Date: 2025-10-06-17:23
- * @Description:
+ * @Description: 配置
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
     /**
-     * TODO: Cors configuration
+     * CORS Configuration
      */
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOriginPatterns("*")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600);
+    }
 
     /**
      * Static Resource Handler
