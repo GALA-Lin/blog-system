@@ -8,7 +8,7 @@ import lombok.EqualsAndHashCode;
 /**
  * @Author: GALA_Lin
  * @Date: 2025-10-06-18:21
- * @Description:
+ * @Description: 权限实体类
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
