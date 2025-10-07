@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@MapperScan("com.blog.mapper")
+@MapperScan("com.blog.**.mapper")
 @EnableCaching
 @EnableAsync
 @EnableScheduling
