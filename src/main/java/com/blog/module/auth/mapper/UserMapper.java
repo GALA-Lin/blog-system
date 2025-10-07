@@ -13,6 +13,7 @@ import java.util.List;
  * @Date: 2025-10-07-01:10
  * @Description:
  */
+@Mapper
 public interface UserMapper extends BaseMapper<User> {
     /**
      * 验证用户名是否存在
