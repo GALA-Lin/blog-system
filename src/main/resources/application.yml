@@ -123,7 +123,7 @@ minio:
 
 # JWT Configuration
 jwt:
-  secret: your-256-bit-secret-key-change-this-in-production-please-make-it-long-enough
+  secret: f769c3cf25fc58e8d3a979f8df34e1f9b870dea6bd6c76886ba715d1e50d9fcc
   expiration: 604800000 # 7 days in milliseconds
   header: Authorization
   prefix: Bearer
