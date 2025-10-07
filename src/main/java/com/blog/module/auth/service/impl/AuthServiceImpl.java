@@ -1,8 +1,8 @@
 package com.blog.module.auth.service.impl;
 
-import com.blog.module.auth.DTO.LoginDTO;
-import com.blog.module.auth.DTO.RegisterDTO;
-import com.blog.module.auth.VO.LoginVO;
+import com.blog.DTO.auth.LoginDTO;
+import com.blog.DTO.auth.RegisterDTO;
+import com.blog.VO.auth.LoginVO;
 import com.blog.module.auth.mapper.RoleMapper;
 import com.blog.module.auth.mapper.UserMapper;
 import com.blog.module.auth.mapper.UserRoleMapper;
@@ -14,7 +14,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.blog.common.ResultCode;
 import com.blog.constants.SystemConstants;
 import com.blog.entity.Role;
@@ -22,22 +21,13 @@ import com.blog.entity.User;
 import com.blog.entity.UserRole;
 import com.blog.common.BusinessException;
 import com.blog.security.SecurityUser;
-import com.blog.util.JwtUtil;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * @Author: GALA_Lin
