@@ -1,6 +1,7 @@
 package com.blog.config;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
+import com.blog.entity.UserRole;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
@@ -19,13 +20,22 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
     @Override
     public void insertFill(MetaObject metaObject) {
         log.debug("开始插入填充....");
+        Object originalObject = metaObject.getOriginalObject();
+        // 排除UserRole实体，不填充updatedAt
+        if (!(originalObject instanceof UserRole)) {
+            this.strictInsertFill(metaObject, "updatedAt", LocalDateTime.class, LocalDateTime.now());
+        }
+        // 所有实体都填充createdAt
         this.strictInsertFill(metaObject, "createdAt", LocalDateTime.class, LocalDateTime.now());
-        this.strictInsertFill(metaObject, "updatedAt", LocalDateTime.class, LocalDateTime.now());
     }
 
     @Override
     public void updateFill(MetaObject metaObject) {
         log.debug("开始更新填充....");
-        this.strictUpdateFill(metaObject, "updatedAt", LocalDateTime.class, LocalDateTime.now());
+        Object originalObject = metaObject.getOriginalObject();
+        // 排除UserRole实体，不填充updatedAt
+        if (!(originalObject instanceof UserRole)) {
+            this.strictUpdateFill(metaObject, "updatedAt", LocalDateTime.class, LocalDateTime.now());
+        }
     }
 }
