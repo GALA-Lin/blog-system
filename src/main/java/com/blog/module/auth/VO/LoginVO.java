@@ -15,7 +15,7 @@ import java.util.List;
  */
 @Data
 @Builder
-@Schema(description = "登陆响应")
+@Schema(description = "登陆响应VO")
 public class LoginVO {
 
     @Schema(description = "Access Token")
