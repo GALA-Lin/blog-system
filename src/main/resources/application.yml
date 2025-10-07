@@ -109,7 +109,7 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
     banner: false
-  mapper-locations: classpath*:/mapper/**/*.xml
+  mapper-locations: classpath*:com/blog/module/**/mapper/*.xml
   type-aliases-package: com.blog.entity
 
 # MinIO Configuration
