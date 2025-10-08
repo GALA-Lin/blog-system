@@ -21,9 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-/**
- * Spring Security Configuration
- */
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
@@ -36,7 +34,8 @@ public class SecurityConfig {
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
     /**
-     * Password Encoder Bean
+     * 密码加密器
+     * @return
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -44,7 +43,8 @@ public class SecurityConfig {
     }
 
     /**
-     * Authentication Provider
+     * 认证提供者
+     * @return
      */
     @Bean
     public AuthenticationProvider authenticationProvider() {
@@ -55,7 +55,10 @@ public class SecurityConfig {
     }
 
     /**
-     * Authentication Manager Bean
+     *
+     * @param config
+     * @return
+     * @throws Exception
      */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
@@ -64,7 +67,10 @@ public class SecurityConfig {
     }
 
     /**
-     * Security Filter Chain
+     * 安全过滤链
+     * @param http
+     * @return
+     * @throws Exception
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -85,7 +91,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
                         .requestMatchers(
-                                "/auth/**",
+                                "/auth/login",
+                                "/auth/register",
+                                "/auth/logout",  // 登出通常需要验证令牌，可根据实际逻辑调整
+                                "/auth/check-username",
                                 "/public/**",
                                 "/doc.html",
                                 "/webjars/**",
