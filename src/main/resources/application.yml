@@ -18,7 +18,7 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/blog_system?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3307/blog_system?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: "041225"
     druid:
@@ -52,8 +52,7 @@ spring:
     redis:
       host: localhost
       port: 6379
-      password: 123456
-      database: 1
+      database: 0
       timeout: 5000ms
       lettuce:
         pool:
@@ -126,7 +125,7 @@ jwt:
   secret: f769c3cf25fc58e8d3a979f8df34e1f9b870dea6bd6c76886ba715d1e50d9fcc
   expiration: 604800000 # 7 days in milliseconds
   header: Authorization
-  prefix: Bearer
+  prefix: "Bearer "# JWT Token prefix
 
 # Blog System Custom Configuration
 blog:
