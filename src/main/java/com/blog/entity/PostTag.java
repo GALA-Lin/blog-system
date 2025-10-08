@@ -10,17 +10,15 @@ import java.time.LocalDateTime;
 
 /**
  * @Author: GALA_Lin
- * @Date: 2025-10-07-13:43
+ * @Date: 2025-10-08-17:25
  * @Description:
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("role_permission")
-public class RolePermission extends BaseEntity {
-
-    private Long roleId;
-
-    private Long permissionId;
+@TableName(value = "post_tags")
+public class PostTag extends BaseEntity {
+    private Long postId;
+    private Long tagId;
     @TableField(exist = false)
     private LocalDateTime updatedAt;
 }

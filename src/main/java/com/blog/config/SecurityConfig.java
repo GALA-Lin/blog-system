@@ -101,7 +101,7 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/druid/**",
-                                "/favicon.ico"
+                                "/posts"
                         ).permitAll()
 
                         // All other requests require authentication
