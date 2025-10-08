@@ -40,16 +40,3 @@ public class PostDetailVO {
     private LocalDateTime publishedAt;
 }
 
-@Data
-class CategoryVO {
-    private Long id;
-    private String name;
-    private String slug;
-}
-
-@Data
-class TagVO {
-    private Long id;
-    private String name;
-    private String slug;
-}
