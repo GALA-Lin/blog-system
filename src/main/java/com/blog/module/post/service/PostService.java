@@ -21,10 +21,10 @@ public interface PostService {
 
     /**
      * 根据文章ID获取文章详情
-     * @param postId 文章ID
+     * @param id 文章ID
      * @return 文章详情
      */
-    PostDetailVO getPostById(Long postId);
+    PostDetailVO getPostById(Long id);
 
     /**
      * 获取文章列表
@@ -43,15 +43,15 @@ public interface PostService {
 
     /**
      * 删除文章
-     * @param postId 文章ID
+     * @param id 文章ID
      */
-    void deletePost(Long postId);
+    void deletePost(Long id);
 
     /**
      * 发布文章
-     * @param postId 文章ID
+     * @param id 文章ID
      */
-    void publishPost(Long postId);
+    void publishPost(Long id);
 
     /**
      * 浏览量自增
