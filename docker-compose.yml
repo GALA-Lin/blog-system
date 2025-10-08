@@ -1,0 +1,77 @@
+# Docker Compose 文件版本
+version: '3.8'
+
+# 定义所有服务
+services:
+  # MySQL 数据库服务
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: unless-stopped
+    environment:
+      # !! 重要：这里的密码需要和您 application.yml 文件中的 password 保持一致 !!
+      MYSQL_ROOT_PASSWORD: '041225'
+      MYSQL_DATABASE: 'blog_system'
+    ports:
+      - "3307:3306"
+    volumes:
+      # 将数据持久化到本地，防止容器删除后数据丢失
+      - mysql_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    networks:
+      - blog-network
+
+  # Redis 缓存服务
+  redis:
+    image: redis:latest
+    container_name: redis_cache
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - blog-network
+
+  # RabbitMQ 消息队列服务
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq_mq
+    restart: unless-stopped
+    ports:
+      # 5672 是程序连接端口, 15672 是网页管理后台端口
+      - "5672:5672"
+      - "15672:15672"
+    # 默认的 guest/guest 用户名密码与您的配置匹配，无需额外设置
+    networks:
+      - blog-network
+
+  # MinIO 对象存储服务
+  minio:
+    image: minio/minio
+    container_name: minio_storage
+    restart: unless-stopped
+    ports:
+      # 9000 是 API 端口, 9001 是网页控制台端口
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      # 用户名和密码与您的配置匹配
+      MINIO_ROOT_USER: 'minioadmin'
+      MINIO_ROOT_PASSWORD: 'minioadmin'
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - blog-network
+
+# 统一管理数据卷
+volumes:
+  mysql_data:
+  redis_data:
+  minio_data:
+
+# 定义网络
+networks:
+  blog-network:
+    driver: bridge
