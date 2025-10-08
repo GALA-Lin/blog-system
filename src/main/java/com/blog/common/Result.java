@@ -74,4 +74,11 @@ public class Result<T> implements Serializable {
         result.setMessage(resultCode.getMessage());
         return result;
     }
+
+    public static Result<Void> success(String message) {
+        Result<Void> result = new Result<>();
+        result.setCode(200);
+        result.setMessage(message);
+        return result;
+    }
 }

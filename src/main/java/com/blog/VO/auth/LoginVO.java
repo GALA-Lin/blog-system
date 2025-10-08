@@ -1,4 +1,4 @@
-package com.blog.module.auth.VO;
+package com.blog.VO.auth;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;

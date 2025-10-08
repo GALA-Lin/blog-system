@@ -1,9 +1,8 @@
-package com.blog.module.auth.VO;
+package com.blog.VO.auth;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -14,6 +13,8 @@ import java.time.LocalDateTime;
  */
 @Data
 @Builder
+@NoArgsConstructor(access = AccessLevel.PUBLIC)  // 生成public无参构造函数
+@AllArgsConstructor(access = AccessLevel.PUBLIC) // 生成public全参构造函数
 @Schema(description = "用户个人信息VO")
 public class UserProfileVO {
 
