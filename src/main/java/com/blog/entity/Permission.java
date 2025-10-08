@@ -1,9 +1,12 @@
 package com.blog.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.blog.entity.base.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.time.LocalDateTime;
 
 /**
  * @Author: GALA_Lin
@@ -24,4 +27,6 @@ public class Permission extends BaseEntity {
     private String action;
 
     private String description;
+    @TableField(exist = false)
+    private LocalDateTime updatedAt;
 }
