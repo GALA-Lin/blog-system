@@ -33,3 +33,4 @@ build/
 .vscode/
 /src/test/
 /logs
+src/main/resources/static/favicon.ico
