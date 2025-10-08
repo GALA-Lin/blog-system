@@ -4,13 +4,17 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.DTO.post.PostCreateDTO;
 import com.blog.DTO.post.PostUpdateDTO;
+import com.blog.VO.post.CategoryVO;
 import com.blog.VO.post.PostDetailVO;
 import com.blog.VO.post.PostListVO;
+import com.blog.VO.post.TagVO;
+import com.blog.entity.*;
+
 import com.blog.common.BusinessException;
 import com.blog.common.PageResult;
 import com.blog.common.ResultCode;
-import com.blog.entity.Post;
-import com.blog.module.post.mapper.PostMapper;
+import com.blog.module.auth.mapper.UserMapper;
+import com.blog.module.post.mapper.*;
 import com.blog.module.post.service.PostService;
 import com.blog.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Author: GALA_Lin
@@ -31,7 +37,11 @@ import java.util.List;
 public class PostServiceImpl implements PostService {
 
     private final PostMapper postMapper;
-
+    private final PostCategoryMapper postCategoryMapper;
+    private final PostTagMapper postTagMapper;
+    private final UserMapper userMapper;
+    private final TagMapper tagMapper;
+    private final CategoryMapper categoryMapper;
     /**
      * 创建文章
      * @param dto 文章创建DTO
@@ -59,7 +69,14 @@ public class PostServiceImpl implements PostService {
         if (dto.getStatus() == 1){
             post.setPublishedAt(LocalDateTime.now());
         }
-        // 4. TODO: Handle categories and tags (Phase 2)
+        // 处理分类与标签
+        if (dto.getCategoryIds() != null && !dto.getCategoryIds().isEmpty()) {
+            saveCategoriesForPost(post.getId(), dto.getCategoryIds());
+        }
+
+        if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()) {
+            saveTagsForPost(post.getId(), dto.getTagIds());
+        }
 
         postMapper.insert(post);
         return post.getId();
@@ -70,7 +87,24 @@ public class PostServiceImpl implements PostService {
                 .replaceAll("\\s+", "-")
                 .substring(0, Math.min(title.length(), 50));
     }
+    private void saveCategoriesForPost(Long postId, List<Long> categoryIds) {
+        for (Long categoryId : categoryIds) {
+            PostCategory postCategory = new PostCategory();
+            postCategory.setPostId(postId);
+            postCategory.setCategoryId(categoryId);
+            postCategoryMapper.insert(postCategory);
+        }
+    }
 
+    // 辅助方法：保存文章标签关联
+    private void saveTagsForPost(Long postId, List<Long> tagIds) {
+        for (Long tagId : tagIds) {
+            PostTag postTag = new PostTag();
+            postTag.setPostId(postId);
+            postTag.setTagId(tagId);
+            postTagMapper.insert(postTag);
+        }
+    }
     /**
      * 获取文章详情
      * @param id 文章ID
@@ -82,11 +116,62 @@ public class PostServiceImpl implements PostService {
         if (post == null) {
             throw new BusinessException(ResultCode.POST_NOT_FOUND);
         }
+        // 加载文章信息
         PostDetailVO vo = new PostDetailVO();
         BeanUtils.copyProperties(post, vo);
-        // 3. TODO: Load author info, categories, tags
+        // 加载作者信息
+        User author = userMapper.selectById(post.getUserId());
+        if (author != null){
+            vo.setAuthorName(author.getNickname() != null ? author.getNickname() : author.getUsername());
+            vo.setAuthorAvatar(author.getAvatarUrl());
+        }
+        // 加载分类
+        List<CategoryVO> categories = loadCategoriesForPost(id);
+        vo.setCategories(categories);
+        // 加载标签
+        List<TagVO> tags = loadTagsForPost(id);
+        vo.setTags(tags);
         return vo;
     }
+
+    private List<CategoryVO> loadCategoriesForPost(Long postId) {
+        // 方法 1: 使用 MyBatis-Plus (简单但需要多次查询)
+        LambdaQueryWrapper<PostCategory> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(PostCategory::getPostId, postId);
+        List<PostCategory> postCategories = postCategoryMapper.selectList(wrapper);
+
+        List<CategoryVO> categoryVOs = new ArrayList<>();
+        for (PostCategory pc : postCategories) {
+            Category category = categoryMapper.selectById(pc.getCategoryId());
+            if (category != null) {
+                CategoryVO vo = new CategoryVO();
+                vo.setId(category.getId());
+                vo.setName(category.getName());
+                vo.setSlug(category.getSlug());
+                categoryVOs.add(vo);
+            }
+        }
+        return categoryVOs;
+    }
+    private List<TagVO> loadTagsForPost(Long postId) {
+        LambdaQueryWrapper<PostTag> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(PostTag::getPostId, postId);
+        List<PostTag> postTags = postTagMapper.selectList(wrapper);
+
+        List<TagVO> tagVOs = new ArrayList<>();
+        for (PostTag pt : postTags) {
+            Tag tag = tagMapper.selectById(pt.getTagId());
+            if (tag != null) {
+                TagVO vo = new TagVO();
+                vo.setId(tag.getId());
+                vo.setName(tag.getName());
+                vo.setSlug(tag.getSlug());
+                tagVOs.add(vo);
+            }
+        }
+        return tagVOs;
+    }
+
 
     /**
      * 获取文章列表
@@ -108,14 +193,23 @@ public class PostServiceImpl implements PostService {
         // 分页查询文章列表
         Page<Post> pageParam = new Page<>(page, size);
         Page<Post> pageResult = postMapper.selectPage(pageParam, wrapper);
+
         // 转换成 VO 并返回
         List<PostListVO> voList = pageResult.getRecords().stream()
-               .map(post -> {
+                .map(post -> {
                     PostListVO vo = new PostListVO();
+                    // 复制基础属性
                     BeanUtils.copyProperties(post, vo);
+                    // 加载并设置作者信息
+                    User author = userMapper.selectById(post.getUserId());
+                    if (author != null) {
+                        vo.setAuthorName(author.getNickname() != null ? author.getNickname() : author.getUsername());
+                        vo.setAuthorAvatar(author.getAvatarUrl());
+                    }
                     return vo;
                 })
-               .toList();
+                .toList();
+
         return PageResult.of(pageResult.getTotal(), pageResult.getSize(), pageResult.getCurrent(), voList);
     }
 
