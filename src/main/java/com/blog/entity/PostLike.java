@@ -18,10 +18,21 @@ import java.time.LocalDateTime;
 @TableName("post_likes")
 public class PostLike extends BaseEntity {
 
+    // 文章ID
     private Long postId;
-
+    // 用户ID
     private Long userId;
 
     @TableField(exist = false)
     private LocalDateTime updatedAt;
+
+    // ========== 瞬态字段 ==========
+
+    // 文章信息
+    @TableField(exist = false)
+    private Post post;
+
+    // 用户信息
+    @TableField(exist = false)
+    private User user;
 }
