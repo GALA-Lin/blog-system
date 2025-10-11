@@ -10,18 +10,29 @@ import java.time.LocalDateTime;
 
 /**
  * @Author: GALA_Lin
- * @Date: 2025-10-08-17:25
+ * @Date: 2025-10-09-10:03
  * @Description:
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName(value = "post_tags")
-public class PostTag extends BaseEntity {
+@TableName("post_likes")
+public class PostLike extends BaseEntity {
 
+    // 文章ID
     private Long postId;
-
-    private Long tagId;
+    // 用户ID
+    private Long userId;
 
     @TableField(exist = false)
     private LocalDateTime updatedAt;
+
+    // ========== 瞬态字段 ==========
+
+    // 文章信息
+    @TableField(exist = false)
+    private Post post;
+
+    // 用户信息
+    @TableField(exist = false)
+    private User user;
 }

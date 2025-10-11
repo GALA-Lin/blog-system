@@ -185,6 +185,27 @@
     </dependencies>
 
     <build>
+        <resources>
+            <!-- 处理src/main/java目录下的MyBatis XML文件 -->
+            <resource>
+                <directory>src/main/java</directory>
+                <includes>
+                    <!-- 只包含mapper包下的XML文件，更精准 -->
+                    <include>**/mapper/*.xml</include>
+                    <include>**/mapper/**/*.xml</include>
+                </includes>
+                <filtering>false</filtering> <!-- 关闭过滤，避免XML中的${}被误替换 -->
+            </resource>
+
+            <!-- 处理src/main/resources目录下的所有资源（默认资源目录） -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*.*</include> <!-- 包含所有文件 -->
+                </includes>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

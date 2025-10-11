@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blog.module.like.mapper.PostLikeMapper">
+
+    <!-- PostLike ResultMap with User -->
+    <resultMap id="PostLikeWithUserMap" type="com.blog.entity.PostLike">
+        <id property="id" column="id"/>
+        <result property="postId" column="post_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="createdAt" column="created_at"/>
+        <association property="user" javaType="com.blog.entity.User">
+            <id property="id" column="user_id"/>
+            <result property="username" column="username"/>
+            <result property="nickname" column="nickname"/>
+            <result property="avatarUrl" column="avatar_url"/>
+        </association>
+    </resultMap>
+
+    <!-- PostLike ResultMap with Post -->
+    <resultMap id="PostLikeWithPostMap" type="com.blog.entity.PostLike">
+        <id property="id" column="id"/>
+        <result property="postId" column="post_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="createdAt" column="created_at"/>
+        <association property="post" javaType="com.blog.entity.Post">
+            <id property="id" column="post_id"/>
+            <result property="title" column="title"/>
+            <result property="slug" column="slug"/>
+            <result property="summary" column="summary"/>
+            <result property="coverImage" column="cover_image"/>
+            <result property="viewCount" column="view_count"/>
+            <result property="likeCount" column="like_count"/>
+            <result property="createdAt" column="post_created_at"/>
+        </association>
+    </resultMap>
+
+    <!-- 获取文章的点赞用户列表 -->
+    <select id="selectPostLikesWithUser" resultMap="PostLikeWithUserMap">
+        SELECT
+            pl.id,
+            pl.post_id,
+            pl.user_id,
+            pl.created_at,
+            u.username,
+            u.nickname,
+            u.avatar_url
+        FROM post_likes pl
+                 INNER JOIN users u ON pl.user_id = u.id
+        WHERE pl.post_id = #{postId}
+        ORDER BY pl.created_at DESC
+    </select>
+
+    <!-- 获取用户的文章点赞列表 -->
+    <select id="selectUserPostLikes" resultMap="PostLikeWithPostMap">
+        SELECT
+            pl.id,
+            pl.post_id,
+            pl.user_id,
+            pl.created_at,
+            p.title,
+            p.slug,
+            p.summary,
+            p.cover_image,
+            p.view_count,
+            p.like_count,
+            p.created_at as post_created_at
+        FROM post_likes pl
+                 INNER JOIN posts p ON pl.post_id = p.id
+        WHERE pl.user_id = #{userId}
+          AND p.status = 1
+        ORDER BY pl.created_at DESC
+    </select>
+
+    <!-- 批量查询用户是否对某篇文章点过赞。用户对这些文章中哪些文章实际点过赞，返回这些文章的 ID 列表。避免对每个文章单独查询一次，提高效率 -->
+    <select id="selectLikedPostIdsByUser" resultType="java.lang.Long">
+        SELECT post_id
+        FROM post_likes
+        WHERE user_id = #{userId}
+        AND post_id IN
+        <foreach collection="postIds" item="postId" open="(" separator="," close=")">
+            #{postId}
+        </foreach>
+    </select>
+
+</mapper>
+
