@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blog.module.comment.mapper.CommentMapper">
+
+    <!-- Result Map with Author -->
+    <resultMap id="CommentWithAuthorMap" type="com.blog.entity.Comment">
+        <id property="id" column="id"/>
+        <result property="postId" column="post_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="rootId" column="root_id"/>
+        <result property="replyToUserId" column="reply_to_user_id"/>
+        <result property="content" column="content"/>
+        <result property="status" column="status"/>
+        <result property="likeCount" column="like_count"/>
+        <result property="replyCount" column="reply_count"/>
+        <result property="ipAddress" column="ip_address"/>
+        <result property="userAgent" column="user_agent"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="isLiked" column="is_liked"/>
+        <result property="isAuthor" column="is_author"/>
+
+        <!-- 作者信息 -->
+        <association property="author" javaType="com.blog.entity.User">
+            <id property="id" column="author_id"/>
+            <result property="username" column="author_username"/>
+            <result property="nickname" column="author_nickname"/>
+            <result property="avatarUrl" column="author_avatar"/>
+        </association>
+
+        <!-- 回复目标用户信息 -->
+        <association property="replyToUser" javaType="com.blog.entity.User">
+            <id property="id" column="reply_to_user_id"/>
+            <result property="username" column="reply_to_username"/>
+            <result property="nickname" column="reply_to_nickname"/>
+        </association>
+    </resultMap>
+
+    <!-- Select post comments with author (paginated, top-level only) -->
+    <select id="selectPostCommentsWithAuthor" resultMap="CommentWithAuthorMap">
+        SELECT
+        c.*,
+        u.id as author_id,
+        u.username as author_username,
+        u.nickname as author_nickname,
+        u.avatar_url as author_avatar,
+        ru.id as reply_to_user_id,
+        ru.username as reply_to_username,
+        ru.nickname as reply_to_nickname,
+        <if test="currentUserId != null">
+            EXISTS(SELECT 1 FROM comment_likes cl WHERE cl.comment_id = c.id AND cl.user_id = #{currentUserId}) as is_liked,
+            (c.user_id = #{currentUserId}) as is_author
+        </if>
+        <if test="currentUserId == null">
+            0 as is_liked,
+            0 as is_author
+        </if>
+        FROM comments c
+        INNER JOIN users u ON c.user_id = u.id
+        LEFT JOIN users ru ON c.reply_to_user_id = ru.id
+        WHERE c.post_id = #{postId}
+        AND c.parent_id IS NULL
+        <if test="status != null">
+            AND c.status = #{status}
+        </if>
+        ORDER BY c.created_at DESC
+    </select>
+
+    <!-- Select replies for a comment -->
+    <select id="selectRepliesByCommentId" resultMap="CommentWithAuthorMap">
+        SELECT
+        c.*,
+        u.id as author_id,
+        u.username as author_username,
+        u.nickname as author_nickname,
+        u.avatar_url as author_avatar,
+        ru.id as reply_to_user_id,
+        ru.username as reply_to_username,
+        ru.nickname as reply_to_nickname,
+        <if test="currentUserId != null">
+            EXISTS(SELECT 1 FROM comment_likes cl WHERE cl.comment_id = c.id AND cl.user_id = #{currentUserId}) as is_liked,
+            (c.user_id = #{currentUserId}) as is_author
+        </if>
+        <if test="currentUserId == null">
+            0 as is_liked,
+            0 as is_author
+        </if>
+        FROM comments c
+        INNER JOIN users u ON c.user_id = u.id
+        LEFT JOIN users ru ON c.reply_to_user_id = ru.id
+        WHERE c.parent_id = #{commentId}
+        AND c.status = 1
+        ORDER BY c.created_at ASC
+    </select>
+
+    <!-- Select user's comments -->
+    <select id="selectUserComments" resultMap="CommentWithAuthorMap">
+        SELECT
+        c.*,
+        u.id as author_id,
+        u.username as author_username,
+        u.nickname as author_nickname,
+        u.avatar_url as author_avatar,
+        p.id as post_id,
+        p.title as post_title,
+        <if test="currentUserId != null">
+            EXISTS(SELECT 1 FROM comment_likes cl WHERE cl.comment_id = c.id AND cl.user_id = #{currentUserId}) as is_liked,
+            (c.user_id = #{currentUserId}) as is_author
+        </if>
+        <if test="currentUserId == null">
+            0 as is_liked,
+            0 as is_author
+        </if>
+        FROM comments c
+        INNER JOIN users u ON c.user_id = u.id
+        INNER JOIN posts p ON c.post_id = p.id
+        WHERE c.user_id = #{userId}
+        AND c.status = 1
+        AND p.status = 1
+        ORDER BY c.created_at DESC
+    </select>
+
+    <!-- Select latest comments (admin) -->
+    <select id="selectLatestComments" resultMap="CommentWithAuthorMap">
+        SELECT
+        c.*,
+        u.id as author_id,
+        u.username as author_username,
+        u.nickname as author_nickname,
+        u.avatar_url as author_avatar,
+        p.id as post_id,
+        p.title as post_title,
+        0 as is_liked,
+        0 as is_author
+        FROM comments c
+        INNER JOIN users u ON c.user_id = u.id
+        INNER JOIN posts p ON c.post_id = p.id
+        <where>
+            <if test="status != null">
+                c.status = #{status}
+            </if>
+        </where>
+        ORDER BY c.created_at DESC
+    </select>
+
+    <!-- Select comment tree for a post -->
+    <select id="selectCommentTree" resultMap="CommentWithAuthorMap">
+        SELECT
+        c.*,
+        u.id as author_id,
+        u.username as author_username,
+        u.nickname as author_nickname,
+        u.avatar_url as author_avatar,
+        ru.id as reply_to_user_id,
+        ru.username as reply_to_username,
+        ru.nickname as reply_to_nickname,
+        <if test="currentUserId != null">
+            EXISTS(SELECT 1 FROM comment_likes cl WHERE cl.comment_id = c.id AND cl.user_id = #{currentUserId}) as is_liked,
+            (c.user_id = #{currentUserId}) as is_author
+        </if>
+        <if test="currentUserId == null">
+            0 as is_liked,
+            0 as is_author
+        </if>
+        FROM comments c
+        INNER JOIN users u ON c.user_id = u.id
+        LEFT JOIN users ru ON c.reply_to_user_id = ru.id
+        WHERE c.post_id = #{postId}
+        AND c.status = 1
+        ORDER BY
+        COALESCE(c.root_id, c.id) ASC,
+        c.created_at ASC
+    </select>
+
+</mapper>

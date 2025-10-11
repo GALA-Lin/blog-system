@@ -76,4 +76,8 @@ public class SecurityUtil {
         return authentication.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals(permission));
     }
+
+    public static Long getCurrentUserIdOrNull() {
+        return getCurrentUserId();
+    }
 }
