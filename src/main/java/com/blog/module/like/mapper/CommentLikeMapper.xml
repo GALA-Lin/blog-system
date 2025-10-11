@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blog.module.like.mapper.CommentLikeMapper">
+
+    <!-- CommentLike ResultMap with User -->
+    <resultMap id="CommentLikeWithUserMap" type="com.blog.entity.CommentLike">
+        <id property="id" column="id" />
+        <result property="commentId" column="comment_id" />
+        <result property="userId" column="user_id" />
+        <result property="createdAt" column="created_at"/>
+
+        <association property="user" javaType="com.blog.entity.User">
+            <id property="id" column="user_id"/>
+            <result property="username" column="username"/>
+            <result property="nickname" column="nickname"/>
+            <result property="avatarUrl" column="avatar_url"/>
+        </association>
+    </resultMap>
+
+    <!-- CommentLike ResultMap with Comment -->
+    <resultMap id="CommentLikeWithCommentMap" type="com.blog.entity.CommentLike">
+        <id property="id" column="id"/>
+        <result property="commentId" column="comment_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="createdAt" column="created_at"/>
+
+        <association property="comment" javaType="com.blog.entity.Comment">
+            <id property="id" column="comment_id"/>
+            <result property="postId" column="post_id"/>
+            <result property="content" column="content"/>
+            <result property="likeCount" column="like_count"/>
+            <result property="createdAt" column="comment_created_at"/>
+        </association>
+    </resultMap>
+
+    <!-- 获取评论的点赞用户列表 -->
+    <select id="selectCommentLikesWithUser" resultMap="CommentLikeWithUserMap">
+        SELECT
+            cl.id,
+            cl.comment_id,
+            cl.user_id,
+            cl.created_at,
+            u.username,
+            u.nickname,
+            u.avatar_url
+        FROM comment_likes cl
+                 INNER JOIN users u ON cl.user_id = u.id
+        WHERE cl.comment_id = #{commentId}
+        ORDER BY cl.created_at DESC
+    </select>
+
+    <!-- 获取用户点赞的评论列表 -->
+    <select id="selectUserLikesWithComment" resultMap="CommentLikeWithCommentMap">
+        SELECT
+            cl.id,
+            cl.comment_id,
+            cl.user_id,
+            cl.created_at,
+            c.post_id,
+            c.content,
+            c.like_count,
+            c.created_at as comment_created_at
+        FROM comment_likes cl
+                 INNER JOIN comments c ON cl.comment_id = c.id
+        WHERE cl.user_id = #{userId}
+          AND c.status = 1
+        ORDER BY cl.created_at DESC
+    </select>
+
+    <!-- 批量检查用户是否点赞了多个评论 -->
+    <select id="selectLikedCommentIdsByUser" resultType="java.lang.Long">
+        SELECT comment_id
+        FROM comment_likes
+        WHERE user_id = #{userId}
+        AND comment_id IN
+        <foreach collection="commentIds" item="commentId" open="(" separator="," close=")">
+            #{commentId}
+        </foreach>
+    </select>
+</mapper>
