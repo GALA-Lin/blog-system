@@ -34,19 +34,27 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private final PostMapper postMapper;
     private final INotificationService notificationService;
 
+    /**
+     * 创建评论
+     * @param dto 评论创建DTO
+     * @param userId 用户ID
+     * @param ipAddress IP地址
+     * @param userAgent 用户代理，识别用户
+     * @return 评论详情
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CommentDTO createComment(CommentCreateDTO dto, Long userId, String ipAddress, String userAgent) {
-        // Validate post exists and allows comments
+        // 验证文章存在且允许评论
         Post post = postMapper.selectById(dto.getPostId());
         if (post == null) {
-            throw new BusinessException("Post not found");
+            throw new BusinessException("文章不存在");
         }
         if (post.getStatus() != 1) {
-            throw new BusinessException("Cannot comment on unpublished post");
+            throw new BusinessException("文章未发布，无法评论");
         }
         if (post.getAllowComment() == 0) {
-            throw new BusinessException("Comments are disabled for this post");
+            throw new BusinessException("评论已关闭");
         }
 
         Comment comment = new Comment();
@@ -55,18 +63,18 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         comment.setContent(dto.getContent());
         comment.setIpAddress(ipAddress);
         comment.setUserAgent(userAgent);
-        comment.setStatus(1); // Auto-approve, or 0 for manual review
+        comment.setStatus(1); // 自动通过审核
         comment.setLikeCount(0);
         comment.setReplyCount(0);
 
-        // Handle parent comment and reply
+        // 处理父评论并回复
         if (dto.getParentId() != null) {
             Comment parentComment = commentMapper.selectById(dto.getParentId());
             if (parentComment == null) {
-                throw new BusinessException("Parent comment not found");
+                throw new BusinessException("父评论不存在");
             }
             if (!parentComment.getPostId().equals(dto.getPostId())) {
-                throw new BusinessException("Parent comment does not belong to this post");
+                throw new BusinessException("父评论不属于当前文章");
             }
 
             comment.setParentId(dto.getParentId());
@@ -79,43 +87,75 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             }
         }
 
-        // Save comment
+        // 插入评论
         commentMapper.insert(comment);
 
-        // Send notifications (async)
+        // fix：取消触发器，更新父评论的 reply_count
+        if (comment.getParentId() != null) {
+            updateParentReplyCount(comment.getRootId());
+        }
+
+
+        // 发送通知
+        // TODO: 临时service,异步发送通知
         try {
-            // Notify post author
+            // 通知作者
             if (!post.getUserId().equals(userId)) {
                 notificationService.createCommentNotification(post.getUserId(), userId, comment.getId(), post.getId());
             }
 
-            // Notify replied user
+            // 通知被回复者
             if (comment.getReplyToUserId() != null && !comment.getReplyToUserId().equals(userId)) {
                 notificationService.createReplyNotification(comment.getReplyToUserId(), userId, comment.getId(), post.getId());
             }
         } catch (Exception e) {
-            log.error("Failed to send comment notification", e);
+            log.error("未能发送通知", e);
         }
 
         return getCommentDetail(comment.getId(), userId);
     }
+    // 更新父评论的 reply_count
+    private void updateParentReplyCount(Long parentId) {
+        try {
+            // 计算父评论的实际回复数
+            Long replyCount = commentMapper.selectCount(
+                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Comment>()
+                            .eq(Comment::getParentId, parentId)
+                            .eq(Comment::getStatus, 1)
+            );
 
+            // 更新父评论
+            Comment parent = new Comment();
+            parent.setId(parentId);
+            parent.setReplyCount(replyCount.intValue());
+            commentMapper.updateById(parent);
+
+            log.debug("更新父评论 {} 的 reply_count 为 {}", parentId, replyCount);
+        } catch (Exception e) {
+            log.error("更新父评论的 reply_count 失败", e);
+        }
+    }
+
+    /**
+     * 更新评论
+     * @param dto 评论更新DTO
+     * @param userId 用户ID
+     * @return 评论详情
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CommentDTO updateComment(CommentUpdateDTO dto, Long userId) {
         Comment comment = commentMapper.selectById(dto.getId());
         if (comment == null) {
-            throw new BusinessException("Comment not found");
+            throw new BusinessException("评论不存在");
         }
 
-        // Only author can update
         if (!comment.getUserId().equals(userId)) {
-            throw new BusinessException("You can only update your own comments");
+            throw new BusinessException("只能更新自己的评论");
         }
 
-        // Cannot update deleted comments
         if (comment.getStatus() == -1) {
-            throw new BusinessException("Cannot update deleted comment");
+            throw new BusinessException("评论已删除，无法更新");
         }
 
         comment.setContent(dto.getContent());
@@ -124,35 +164,44 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         return getCommentDetail(comment.getId(), userId);
     }
 
+    /**
+     * 删除评论(软删除)
+     * @param commentId 评论ID
+     * @param userId 用户ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteComment(Long commentId, Long userId) {
         Comment comment = commentMapper.selectById(commentId);
         if (comment == null) {
-            throw new BusinessException("Comment not found");
+            throw new BusinessException("评论不存在");
         }
 
         if (!canDeleteComment(commentId, userId)) {
-            throw new BusinessException("You don't have permission to delete this comment");
+            throw new BusinessException("你没有权限删除此评论");
         }
 
-        // Soft delete: update status to -1
         comment.setStatus(-1);
         commentMapper.updateById(comment);
 
-        // Note: Triggers will handle updating counts
     }
 
+    /**
+     * 获取评论详情
+     * @param commentId 评论ID
+     * @param userId 用户ID
+     * @return 评论详情
+     */
     @Override
     public CommentDTO getCommentDetail(Long commentId, Long userId) {
         Comment comment = commentMapper.selectCommentWithAuthor(commentId);
         if (comment == null) {
-            throw new BusinessException("Comment not found");
+            throw new BusinessException("评论不存在");
         }
 
         CommentDTO dto = convertToDTO(comment);
 
-        // Load replies if it's a parent comment
+        // 加载回复
         if (comment.getParentId() == null) {
             List<Comment> replies = commentMapper.selectRepliesByCommentId(commentId, userId);
             dto.setChildren(replies.stream().map(this::convertToDTO).collect(Collectors.toList()));
@@ -161,6 +210,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         return dto;
     }
 
+    /**
+     * 获取文章评论列表
+     * @param queryDTO 查询条件DTO
+     * @param userId 用户ID
+     * @return 文章评论列表
+     */
     @Override
     public PageResult<CommentDTO> getPostComments(CommentQueryDTO queryDTO, Long userId) {
         Page<Comment> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
@@ -187,22 +242,28 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         return new PageResult<>(dtoList, commentPage.getTotal(), queryDTO.getPageNum(), queryDTO.getPageSize());
     }
 
+    /**
+     * 获取评论树
+     * @param postId 文章ID
+     * @param userId 用户ID
+     * @return 根评论
+     */
     @Override
     public List<CommentDTO> getCommentTree(Long postId, Long userId) {
         List<Comment> allComments = commentMapper.selectCommentTree(postId, userId);
 
-        // Build tree structure
+        // 建立评论ID与DTO的映射
         Map<Long, CommentDTO> commentMap = new HashMap<>();
         List<CommentDTO> rootComments = new ArrayList<>();
 
-        // First pass: convert all comments to DTOs
+        // 转化为DTO
         for (Comment comment : allComments) {
             CommentDTO dto = convertToDTO(comment);
             dto.setChildren(new ArrayList<>());
             commentMap.put(dto.getId(), dto);
         }
 
-        // Second pass: build tree
+        // 建立评论树
         for (CommentDTO dto : commentMap.values()) {
             if (dto.getParentId() == null) {
                 rootComments.add(dto);
@@ -217,6 +278,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         return rootComments;
     }
 
+    /**
+     * 获取用户的评论列表
+     * @param queryDTO 查询条件DTO
+     * @param userId 用户ID
+     * @return 用户评论列表
+     */
     @Override
     public PageResult<CommentDTO> getUserComments(CommentQueryDTO queryDTO, Long userId) {
         Page<Comment> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
@@ -230,6 +297,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         return new PageResult<>(dtoList, commentPage.getTotal(), queryDTO.getPageNum(), queryDTO.getPageSize());
     }
 
+    /**
+     * 获取最新评论列表
+     * @param queryDTO 查询条件DTO
+     * @return 最新评论列表
+     */
     @Override
     public PageResult<CommentDTO> getLatestComments(CommentQueryDTO queryDTO) {
         Page<Comment> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
@@ -243,15 +315,25 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         return new PageResult<>(dtoList, commentPage.getTotal(), queryDTO.getPageNum(), queryDTO.getPageSize());
     }
 
+    /**
+     * 批量更新评论状态
+     * @param dto 评论状态DTO
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateCommentStatus(CommentStatusDTO dto) {
         commentMapper.batchUpdateStatus(dto.getIds(), dto.getStatus());
 
-        log.info("Updated {} comments to status: {}, reason: {}",
+        log.info("批量更新评论状态，共 {} 条，状态为 {}，原因为 {}",
                 dto.getIds().size(), dto.getStatus(), dto.getReason());
     }
 
+    /**
+     * 判断用户是否有权限删除评论
+     * @param commentId 评论ID
+     * @param userId 用户ID
+     * @return 是否有权限删除评论
+     */
     @Override
     public boolean canDeleteComment(Long commentId, Long userId) {
         Comment comment = commentMapper.selectById(commentId);
@@ -259,13 +341,18 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             return false;
         }
 
-        // User can delete their own comments
+        // 用户只能删除自己的评论
         return comment.getUserId().equals(userId);
 
-        // Check if user is admin or moderator (implement permission check)
-        // return hasPermission(userId, "comment:delete:any");
+        //管理员删除任何评论
     }
 
+    /**
+     * 判断用户是否有权限更新评论
+     * @param commentId 评论ID
+     * @param userId 用户ID
+     * @return 是否有权限更新评论
+     */
     @Override
     public boolean canUpdateComment(Long commentId, Long userId) {
         Comment comment = commentMapper.selectById(commentId);
@@ -277,18 +364,31 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         return comment.getUserId().equals(userId);
     }
 
+    /**
+     * 获取文章评论数量
+     * @param postId 文章ID
+     * @return 文章评论数量
+     */
     @Override
     public Long getPostCommentCount(Long postId) {
         return commentMapper.countByPostId(postId);
     }
 
+    /**
+     * 获取用户评论数量
+     * @param userId 用户ID
+     * @return 用户评论数量
+     */
     @Override
     public Long getUserCommentCount(Long userId) {
         return commentMapper.countByUserId(userId);
     }
 
+
     /**
-     * Convert Comment entity to DTO
+     * 转换评论为DTO
+     * @param comment 评论
+     * @return 评论DTO
      */
     private CommentDTO convertToDTO(Comment comment) {
         CommentDTO dto = new CommentDTO();
