@@ -18,12 +18,43 @@ import java.util.List;
 @Mapper
 public interface PostMapper extends BaseMapper<Post> {
 
+    /**
+     * 增加浏览量
+     */
     @Update("UPDATE posts SET view_count = view_count + 1 WHERE id = #{postId}")
     void incrementViewCount(Long id);
 
+    /**
+     * 根据文章ID查询分类
+     */
     @Select("SELECT c.* FROM categories c " +
             "INNER JOIN post_categories pc ON c.id = pc.category_id " +
             "WHERE pc.post_id = #{postId}")
     List<Category> selectCategoriesByPostId(@Param("postId") Long postId);
+
+    /**
+     * 增加文章点赞数
+     */
+    @Update("UPDATE posts SET like_count = like_count + 1 WHERE id = #{postId}")
+    int incrementLikeCount(@Param("postId") Long postId);
+
+    /**
+     * 减少文章点赞数
+     */
+    @Update("UPDATE posts SET like_count = like_count - 1 WHERE id = #{postId} AND like_count > 0")
+    int decrementLikeCount(@Param("postId") Long postId);
+
+
+    /**
+     * 增加文章收藏数
+     */
+    @Update("UPDATE posts SET favorite_count = favorite_count + 1 WHERE id = #{postId}")
+    int incrementFavoriteCount(@Param("postId") Long postId);
+
+    /**
+     * 减少文章收藏数
+     */
+    @Update("UPDATE posts SET favorite_count = favorite_count - 1 WHERE id = #{postId} AND favorite_count > 0")
+    int decrementFavoriteCount(@Param("postId") Long postId);
 
 }
