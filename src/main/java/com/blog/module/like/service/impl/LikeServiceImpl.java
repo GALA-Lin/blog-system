@@ -2,7 +2,8 @@ package com.blog.module.like.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.blog.DTO.comment.UserSimpleDTO;
+import com.blog.DTO.UserSimpleDTO;
+import com.blog.DTO.post.PostDTO;
 import com.blog.common.BusinessException;
 import com.blog.common.PageResult;
 import com.blog.entity.*;
@@ -145,15 +146,42 @@ public class LikeServiceImpl implements LikeService {
     }
 
     @Override
-    public PageResult<Long> getUserLikePosts(Long userId, Integer pageNum, Integer pageSize) {
+    public PageResult<PostDTO> getUserLikePosts(Long userId, Integer pageNum, Integer pageSize) {
         Page<PostLike> page = new Page<>(pageNum, pageSize);
         IPage<PostLike> likePage = postLikeMapper.selectUserLikesWithPost(page, userId);
 
-        List<Long> postIds = likePage.getRecords().stream()
-                .map(PostLike::getPostId)
+        List<PostDTO> posts = likePage.getRecords().stream()
+                .map(like -> {
+                    PostDTO dto = new PostDTO();
+                    Post post = like.getPost();
+                    if (post != null) {
+                        // 手动映射字段
+                        dto.setId(post.getId());
+                        dto.setTitle(post.getTitle());
+                        dto.setSlug(post.getSlug());
+                        dto.setSummary(post.getSummary());
+                        dto.setContent(post.getContent());
+                        dto.setContentType(post.getContentType());
+                        dto.setCoverImage(post.getCoverImage());
+                        dto.setStatus(post.getStatus());
+                        dto.setIsTop(post.getIsTop());
+                        dto.setIsOriginal(post.getIsOriginal());
+                        dto.setOriginalUrl(post.getOriginalUrl());
+                        dto.setViewCount(Math.toIntExact(post.getViewCount()));
+                        dto.setLikeCount(post.getLikeCount());
+                        dto.setFavoriteCount(post.getFavoriteCount());
+                        dto.setCommentCount(post.getCommentCount());
+                        dto.setAllowComment(post.getAllowComment());
+                        dto.setPublishedAt(post.getPublishedAt());
+                        dto.setCreatedAt(post.getCreatedAt());
+                        dto.setUpdatedAt(post.getUpdatedAt());
+
+                    }
+                    return dto;
+                })
                 .collect(Collectors.toList());
 
-        return new PageResult<>(postIds, likePage.getTotal(), pageNum, pageSize);
+        return new PageResult<>(posts, likePage.getTotal(), pageNum, pageSize);
     }
 
     // ========== 评论点赞实现 ==========

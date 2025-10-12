@@ -1,6 +1,7 @@
 package com.blog.module.like.service;
 
-import com.blog.DTO.comment.UserSimpleDTO;
+import com.blog.DTO.UserSimpleDTO;
+import com.blog.DTO.post.PostDTO;
 import com.blog.common.PageResult;
 
 import java.util.List;
@@ -64,12 +65,13 @@ public interface LikeService {
 
     /**
      * 获取用户的点赞文章列表
-     * @param userId 用户ID
-     * @param pageNum 页码
+     *
+     * @param userId   用户ID
+     * @param pageNum  页码
      * @param pageSize 页大小
      * @return 点赞文章列表
      */
-    PageResult<Long> getUserLikePosts(Long userId, Integer pageNum, Integer pageSize);
+    PageResult<PostDTO> getUserLikePosts(Long userId, Integer pageNum, Integer pageSize);
 
     // ========== 评论点赞 ==========
     /**
