@@ -22,9 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Comment Service Implementation
- */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -394,14 +392,14 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         CommentDTO dto = new CommentDTO();
         BeanUtils.copyProperties(comment, dto);
 
-        // Convert author
+        // 作者
         if (comment.getAuthor() != null) {
             UserSimpleDTO author = new UserSimpleDTO();
             BeanUtils.copyProperties(comment.getAuthor(), author);
             dto.setAuthor(author);
         }
 
-        // Convert reply-to user
+        // 回复者
         if (comment.getReplyToUser() != null) {
             UserSimpleDTO replyToUser = new UserSimpleDTO();
             BeanUtils.copyProperties(comment.getReplyToUser(), replyToUser);
