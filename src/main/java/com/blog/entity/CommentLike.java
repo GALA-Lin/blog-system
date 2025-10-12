@@ -24,4 +24,7 @@ public class CommentLike extends BaseEntity {
 
     @TableField(exist = false)
     private LocalDateTime updatedAt;
+
+    @TableField(exist = false)
+    private User user;
 }
