@@ -83,38 +83,3 @@ public class PostDTO {
     private Long favoriteFolderId;
 }
 
-/**
- * 分类简要信息 DTO
- */
-@Data
-class CategorySimpleDTO {
-
-    private Long id;
-
-    private String name;
-
-    private String slug;
-
-    private String description;
-
-    private String icon;
-
-    private Integer postCount;
-}
-
-/**
- * 标签简要信息 DTO
- */
-@Data
-class TagSimpleDTO {
-
-    private Long id;
-
-    private String name;
-
-    private String slug;
-
-    private String color;
-
-    private Integer postCount;
-}
