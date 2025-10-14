@@ -19,6 +19,9 @@ public interface FavoriteFolderMapper extends BaseMapper<FavoriteFolder> {
      * @param userId 用户ID
      * @return 收藏夹列表
      */
+    @Select("SELECT * FROM favorite_folders " +
+            "WHERE user_id = #{userId} " +
+            "ORDER BY is_default DESC, sort_order ASC, created_at DESC")
     List<FavoriteFolder> selectUserFolders(@Param("userId") Long userId);
 
     /**
