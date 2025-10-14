@@ -1,4 +1,4 @@
-package com.blog.DTO;
+package com.blog.VO.auth;
 
 import lombok.Data;
 
@@ -8,7 +8,7 @@ import lombok.Data;
  * @Description: 用户简单数据传输对象，用于嵌套对象
  */
 @Data
-public class UserSimpleDTO {
+public class UserSimpleVO {
 
     private Long id;
 

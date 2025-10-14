@@ -1,7 +1,7 @@
 package com.blog.module.like.controller;
 
-import com.blog.DTO.UserSimpleDTO;
-import com.blog.DTO.post.PostDTO;
+import com.blog.VO.auth.UserSimpleVO;
+import com.blog.VO.post.PostVO;
 import com.blog.common.PageResult;
 import com.blog.common.Result;
 import com.blog.module.like.service.LikeService;
@@ -102,32 +102,32 @@ public class LikeController {
 
     @Operation(summary = "获取文章的点赞用户列表")
     @GetMapping("/post/{postId}/users")
-    public Result<PageResult<UserSimpleDTO>> getPostLikeUsers(
+    public Result<PageResult<UserSimpleVO>> getPostLikeUsers(
             @PathVariable Long postId,
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "20") Integer pageSize) {
-        PageResult<UserSimpleDTO> users = likeService.getPostLikeUsers(postId, pageNum, pageSize);
+        PageResult<UserSimpleVO> users = likeService.getPostLikeUsers(postId, pageNum, pageSize);
         return Result.success(users);
     }
 
     @Operation(summary = "获取我点赞的文章列表")
     @GetMapping("/my-posts")
     @PreAuthorize("isAuthenticated()")
-    public Result<PageResult<PostDTO>> getMyLikePosts(
+    public Result<PageResult<PostVO>> getMyLikePosts(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
         Long userId = SecurityUtil.getCurrentUserId();
-        PageResult<PostDTO> posts = likeService.getUserLikePosts(userId, pageNum, pageSize);
+        PageResult<PostVO> posts = likeService.getUserLikePosts(userId, pageNum, pageSize);
         return Result.success(posts);
     }
 
     @Operation(summary = "获取指定用户点赞的文章列表")
     @GetMapping("/user/{userId}/posts")
-    public Result<PageResult<PostDTO>> getUserLikePosts(
+    public Result<PageResult<PostVO>> getUserLikePosts(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
-        PageResult<PostDTO> posts = likeService.getUserLikePosts(userId, pageNum, pageSize);
+        PageResult<PostVO> posts = likeService.getUserLikePosts(userId, pageNum, pageSize);
         return Result.success(posts);
     }
 
@@ -180,11 +180,11 @@ public class LikeController {
 
     @Operation(summary = "获取评论的点赞用户列表")
     @GetMapping("/comment/{commentId}/users")
-    public Result<PageResult<UserSimpleDTO>> getCommentLikeUsers(
+    public Result<PageResult<UserSimpleVO>> getCommentLikeUsers(
             @PathVariable Long commentId,
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "20") Integer pageSize) {
-        PageResult<UserSimpleDTO> users = likeService.getCommentLikeUsers(commentId, pageNum, pageSize);
+        PageResult<UserSimpleVO> users = likeService.getCommentLikeUsers(commentId, pageNum, pageSize);
         return Result.success(users);
     }
 

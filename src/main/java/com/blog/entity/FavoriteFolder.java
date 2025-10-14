@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.blog.entity.base.BaseEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * @Author: GALA_Lin
@@ -13,6 +14,7 @@ import lombok.Data;
  * @Description:
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName(value = "favorite_folders")
 public class FavoriteFolder  extends BaseEntity {
 

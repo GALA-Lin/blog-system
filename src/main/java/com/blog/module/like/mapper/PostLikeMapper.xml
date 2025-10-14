@@ -51,7 +51,7 @@
     </select>
 
     <!-- 获取用户的文章点赞列表 -->
-    <select id="selectUserPostLikes" resultMap="PostLikeWithPostMap">
+    <select id="selectUserLikesWithPost" resultMap="PostLikeWithPostMap">
         SELECT
             pl.id,
             pl.post_id,
