@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blog.module.favorite.mapper.FavoriteMapper">
+
+    <!-- Favorite ResultMap with Post -->
+    <resultMap id="FavoriteWithPostMap" type="com.blog.entity.Favorite">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="postId" column="post_id"/>
+        <result property="folderId" column="folder_id"/>
+        <result property="notes" column="notes"/>
+        <result property="createdAt" column="created_at"/>
+
+        <association property="post" javaType="com.blog.entity.Post">
+            <id property="id" column="post_id"/>
+            <result property="title" column="title"/>
+            <result property="slug" column="slug"/>
+            <result property="summary" column="summary"/>
+            <result property="coverImage" column="cover_image"/>
+            <result property="viewCount" column="view_count"/>
+            <result property="likeCount" column="like_count"/>
+            <result property="favoriteCount" column="favorite_count"/>
+            <result property="createdAt" column="post_created_at"/>
+        </association>
+
+        <association property="folder" javaType="com.blog.entity.FavoriteFolder">
+            <id property="id" column="folder_id"/>
+            <result property="name" column="folder_name"/>
+            <result property="isPublic" column="folder_is_public"/>
+            <result property="postCount" column="folder_post_count"/>
+        </association>
+    </resultMap>
+
+    <!-- Favorite ResultMap with User -->
+    <resultMap id="FavoriteWithUserMap" type="com.blog.entity.Favorite">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="postId" column="post_id"/>
+        <result property="folderId" column="folder_id"/>
+        <result property="notes" column="notes"/>
+        <result property="createdAt" column="created_at"/>
+
+        <association property="user" javaType="com.blog.entity.User">
+            <id property="id" column="user_id"/>
+            <result property="username" column="username"/>
+            <result property="nickname" column="nickname"/>
+            <result property="avatarUrl" column="avatar_url"/>
+        </association>
+    </resultMap>
+
+    <!--  获取用户收藏的文章列表  -->
+    <select id="selectUserFavoritesWithPost" resultMap="FavoriteWithPostMap">
+        select
+            f.id,
+            f.user_id,
+            f.post_id,
+            f.folder_id,
+            f.notes,
+            f.created_at,
+            p.title,
+            p.slug,
+            p.summary,
+            p.cover_image,
+            p.view_count,
+            p.like_count,
+            p.favorite_count,
+            p.created_at as post_created_at,
+            ff.name as folder_name,
+            ff.is_public as folder_is_public,
+            ff.post_count as folder_post_count
+        FROM favorites f
+        INNER JOIN posts p ON f.post_id = p.id
+        INNER JOIN favorite_folders ff ON f.folder_id = ff.id
+        WHERE f.user_id = #{userId}
+            AND p.status = 1
+        <if test="folderId != null">
+            AND f.folder_id = #{folderId}
+        </if>
+        <choose>
+            <when test="sortBy == 'post_title'">
+                ORDER BY p.title ${sortOrder}
+            </when>
+            <otherwise>
+                ORDER BY f.created_at ${sortOrder}
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 获取收藏夹中的文章列表 -->
+    <select id="selectFolderFavorites" resultMap="FavoriteWithPostMap">
+        SELECT
+            f.id,
+            f.user_id,
+            f.post_id,
+            f.folder_id,
+            f.notes,
+            f.created_at,
+            p.title,
+            p.slug,
+            p.summary,
+            p.cover_image,
+            p.view_count,
+            p.like_count,
+            p.favorite_count,
+            p.created_at as post_created_at
+        FROM favorites f
+                 INNER JOIN posts p ON f.post_id = p.id
+        WHERE f.folder_id = #{folderId}
+          AND p.status = 1
+        ORDER BY f.created_at DESC
+    </select>
+
+    <!-- 获取文章的收藏用户列表 -->
+    <select id="selectPostFavoritesWithUser" resultMap="FavoriteWithUserMap">
+        SELECT
+            f.id,
+            f.user_id,
+            f.post_id,
+            f.folder_id,
+            f.created_at,
+            u.username,
+            u.nickname,
+            u.avatar_url
+        FROM favorites f
+                 INNER JOIN users u ON f.user_id = u.id
+        WHERE f.post_id = #{postId}
+        ORDER BY f.created_at DESC
+    </select>
+</mapper>
