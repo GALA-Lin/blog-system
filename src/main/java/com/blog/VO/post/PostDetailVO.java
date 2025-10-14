@@ -13,30 +13,28 @@ import java.util.List;
  */
 @Data
 public class PostDetailVO {
+
     private Long id;
     private String title;
     private String slug;
     private String summary;
-    private String content;
     private String coverImage;
+    private Integer viewCount;
+    private Integer likeCount;
+    private Integer favoriteCount;
+    private LocalDateTime createdAt;
 
+    private String content;
     private Long userId;
     private String authorName;
     private String authorAvatar;
 
     private Integer status;
-    private Long viewCount;
-    private Integer likeCount;
-    private Integer favoriteCount;
     private Integer commentCount;
 
     private List<CategoryVO> categories;
     private List<TagVO> tags;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createdAt;
-
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime publishedAt;
 }
 

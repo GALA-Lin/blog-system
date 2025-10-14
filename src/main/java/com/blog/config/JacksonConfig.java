@@ -10,6 +10,7 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 
 import java.time.LocalDate;
@@ -28,6 +29,7 @@ public class JacksonConfig {
     private static final String DATE_PATTERN = "yyyy-MM-dd";
 
     @Bean
+    @Primary  // 确保这是主要的ObjectMapper bean
     public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
         ObjectMapper objectMapper = builder.createXmlMapper(false).build();
 
@@ -53,6 +55,9 @@ public class JacksonConfig {
 
         // 忽略未知属性
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        // 启用 JSR310 日期时间模块的自动发现
+        objectMapper.findAndRegisterModules();
 
         return objectMapper;
     }
