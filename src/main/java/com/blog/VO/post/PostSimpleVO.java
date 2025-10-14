@@ -1,6 +1,6 @@
-package com.blog.DTO.post;
+package com.blog.VO.post;
 
-import com.blog.DTO.UserSimpleDTO;
+import com.blog.VO.auth.UserSimpleDTO;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  * 文章简要信息 DTO
  */
 @Data
-public class PostSimpleDTO {
+public class PostSimpleVO {
     private Long id;
     private String title;
     private String slug;

@@ -1,6 +1,7 @@
-package com.blog.DTO.favorite;
+package com.blog.VO.favorite;
 
-import com.blog.DTO.post.PostSimpleDTO;
+import com.blog.DTO.favorite.FolderSimpleDTO;
+import com.blog.VO.post.PostSimpleVO;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
  */
 
 @Data
-public class FavoriteDTO {
+public class FavoriteVO {
 
     private Long id;
     private Long userId;
@@ -24,7 +25,7 @@ public class FavoriteDTO {
     /**
      * 文章信息
      */
-    private PostSimpleDTO post;
+    private PostSimpleVO post;
 
     /**
      * 收藏夹信息

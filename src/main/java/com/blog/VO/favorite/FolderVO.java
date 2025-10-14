@@ -1,6 +1,6 @@
-package com.blog.DTO.favorite;
+package com.blog.VO.favorite;
 
-import com.blog.DTO.UserSimpleDTO;
+import com.blog.VO.auth.UserSimpleDTO;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
  * @Description:
  */
 @Data
-public class FolderDTO {
+public class FolderVO {
 
     private Long id;
     private Long userId;

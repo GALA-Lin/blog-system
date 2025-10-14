@@ -1,4 +1,4 @@
-package com.blog.DTO;
+package com.blog.VO.auth;
 
 import lombok.Data;
 

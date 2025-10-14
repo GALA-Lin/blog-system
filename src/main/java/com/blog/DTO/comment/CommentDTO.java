@@ -1,6 +1,6 @@
 package com.blog.DTO.comment;
 
-import com.blog.DTO.UserSimpleDTO;
+import com.blog.VO.auth.UserSimpleDTO;
 import lombok.Data;
 
 import java.time.LocalDateTime;

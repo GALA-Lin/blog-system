@@ -1,12 +1,14 @@
-package com.blog.DTO.post;
+package com.blog.VO.post;
 
 import lombok.Data;
 
 /**
- * 标签简要信息 DTO
+ * @Author: GALA_Lin
+ * @Date: 2025-10-14-11:13
+ * @Description:
  */
 @Data
-public class TagSimpleDTO {
+public class TagSimpleVO {
 
     private Long id;
 

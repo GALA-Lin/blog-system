@@ -1,4 +1,4 @@
-package com.blog.DTO.post;
+package com.blog.VO.post;
 
 import lombok.Data;
 
@@ -6,7 +6,7 @@ import lombok.Data;
  * 分类简要信息 DTO
  */
 @Data
-public class CategorySimpleDTO {
+public class CategorySimpleVO {
 
     private Long id;
 
