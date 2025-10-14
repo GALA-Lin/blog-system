@@ -1,6 +1,6 @@
 package com.blog.VO.post;
 
-import com.blog.VO.auth.UserSimpleDTO;
+import com.blog.VO.auth.UserSimpleVO;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -43,7 +43,7 @@ public class PostVO {
     /**
      * 作者信息
      */
-    private UserSimpleDTO author;
+    private UserSimpleVO author;
 
     /**
      * 分类列表

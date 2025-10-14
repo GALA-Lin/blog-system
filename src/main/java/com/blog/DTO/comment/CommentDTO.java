@@ -1,6 +1,6 @@
 package com.blog.DTO.comment;
 
-import com.blog.VO.auth.UserSimpleDTO;
+import com.blog.VO.auth.UserSimpleVO;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -31,12 +31,12 @@ public class CommentDTO {
     /**
      * Author information
      */
-    private UserSimpleDTO author;
+    private UserSimpleVO author;
 
     /**
      * Reply target user
      */
-    private UserSimpleDTO replyToUser;
+    private UserSimpleVO replyToUser;
 
     /**
      * Child comments (replies)

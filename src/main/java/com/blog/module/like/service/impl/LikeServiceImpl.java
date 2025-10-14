@@ -2,7 +2,7 @@ package com.blog.module.like.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.blog.VO.auth.UserSimpleDTO;
+import com.blog.VO.auth.UserSimpleVO;
 import com.blog.VO.post.PostVO;
 import com.blog.common.BusinessException;
 import com.blog.common.PageResult;
@@ -124,13 +124,13 @@ public class LikeServiceImpl implements LikeService {
     }
 
     @Override
-    public PageResult<UserSimpleDTO> getPostLikeUsers(Long postId, Integer pageNum, Integer pageSize) {
+    public PageResult<UserSimpleVO> getPostLikeUsers(Long postId, Integer pageNum, Integer pageSize) {
         Page<PostLike> page = new Page<>(pageNum, pageSize);
         IPage<PostLike> likePage = postLikeMapper.selectPostLikesWithUser(page, postId);
 
-        List<UserSimpleDTO> users = likePage.getRecords().stream()
+        List<UserSimpleVO> users = likePage.getRecords().stream()
                 .map(like -> {
-                    UserSimpleDTO dto = new UserSimpleDTO();
+                    UserSimpleVO dto = new UserSimpleVO();
                     User user = like.getUser();
                     if (user != null) {
                         dto.setId(user.getId());
@@ -277,13 +277,13 @@ public class LikeServiceImpl implements LikeService {
     }
 
     @Override
-    public PageResult<UserSimpleDTO> getCommentLikeUsers(Long commentId, Integer pageNum, Integer pageSize) {
+    public PageResult<UserSimpleVO> getCommentLikeUsers(Long commentId, Integer pageNum, Integer pageSize) {
         Page<CommentLike> page = new Page<>(pageNum, pageSize);
         IPage<CommentLike> likePage = commentLikeMapper.selectCommentLikesWithUser(page, commentId);
 
-        List<UserSimpleDTO> users = likePage.getRecords().stream()
+        List<UserSimpleVO> users = likePage.getRecords().stream()
                 .map(like -> {
-                    UserSimpleDTO dto = new UserSimpleDTO();
+                    UserSimpleVO dto = new UserSimpleVO();
                     User user = like.getUser();
                     if (user != null) {
                         dto.setId(user.getId());

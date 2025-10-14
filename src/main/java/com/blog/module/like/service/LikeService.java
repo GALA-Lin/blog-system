@@ -1,6 +1,6 @@
 package com.blog.module.like.service;
 
-import com.blog.VO.auth.UserSimpleDTO;
+import com.blog.VO.auth.UserSimpleVO;
 import com.blog.VO.post.PostVO;
 import com.blog.common.PageResult;
 
@@ -61,7 +61,7 @@ public interface LikeService {
      * @param pageSize 页大小
      * @return 点赞用户列表
      */
-    PageResult<UserSimpleDTO> getPostLikeUsers(Long postId, Integer pageNum, Integer pageSize);
+    PageResult<UserSimpleVO> getPostLikeUsers(Long postId, Integer pageNum, Integer pageSize);
 
     /**
      * 获取用户的点赞文章列表
@@ -121,7 +121,7 @@ public interface LikeService {
      * @param pageSize 页大小
      * @return 点赞用户列表
      */
-    PageResult<UserSimpleDTO> getCommentLikeUsers(Long commentId, Integer pageNum, Integer pageSize);
+    PageResult<UserSimpleVO> getCommentLikeUsers(Long commentId, Integer pageNum, Integer pageSize);
 
     /**
      * 获取用户的点赞评论列表

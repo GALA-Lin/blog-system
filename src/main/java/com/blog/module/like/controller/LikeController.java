@@ -1,6 +1,6 @@
 package com.blog.module.like.controller;
 
-import com.blog.VO.auth.UserSimpleDTO;
+import com.blog.VO.auth.UserSimpleVO;
 import com.blog.VO.post.PostVO;
 import com.blog.common.PageResult;
 import com.blog.common.Result;
@@ -102,11 +102,11 @@ public class LikeController {
 
     @Operation(summary = "获取文章的点赞用户列表")
     @GetMapping("/post/{postId}/users")
-    public Result<PageResult<UserSimpleDTO>> getPostLikeUsers(
+    public Result<PageResult<UserSimpleVO>> getPostLikeUsers(
             @PathVariable Long postId,
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "20") Integer pageSize) {
-        PageResult<UserSimpleDTO> users = likeService.getPostLikeUsers(postId, pageNum, pageSize);
+        PageResult<UserSimpleVO> users = likeService.getPostLikeUsers(postId, pageNum, pageSize);
         return Result.success(users);
     }
 
@@ -180,11 +180,11 @@ public class LikeController {
 
     @Operation(summary = "获取评论的点赞用户列表")
     @GetMapping("/comment/{commentId}/users")
-    public Result<PageResult<UserSimpleDTO>> getCommentLikeUsers(
+    public Result<PageResult<UserSimpleVO>> getCommentLikeUsers(
             @PathVariable Long commentId,
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "20") Integer pageSize) {
-        PageResult<UserSimpleDTO> users = likeService.getCommentLikeUsers(commentId, pageNum, pageSize);
+        PageResult<UserSimpleVO> users = likeService.getCommentLikeUsers(commentId, pageNum, pageSize);
         return Result.success(users);
     }
 

@@ -3,7 +3,7 @@ package com.blog.module.comment.service.impl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.blog.VO.auth.UserSimpleDTO;
+import com.blog.VO.auth.UserSimpleVO;
 import com.blog.DTO.comment.*;
 import com.blog.common.BusinessException;
 import com.blog.common.PageResult;
@@ -395,14 +395,14 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
         // 作者
         if (comment.getAuthor() != null) {
-            UserSimpleDTO author = new UserSimpleDTO();
+            UserSimpleVO author = new UserSimpleVO();
             BeanUtils.copyProperties(comment.getAuthor(), author);
             dto.setAuthor(author);
         }
 
         // 回复者
         if (comment.getReplyToUser() != null) {
-            UserSimpleDTO replyToUser = new UserSimpleDTO();
+            UserSimpleVO replyToUser = new UserSimpleVO();
             BeanUtils.copyProperties(comment.getReplyToUser(), replyToUser);
             dto.setReplyToUser(replyToUser);
         }

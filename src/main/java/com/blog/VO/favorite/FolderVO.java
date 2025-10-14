@@ -1,6 +1,6 @@
 package com.blog.VO.favorite;
 
-import com.blog.VO.auth.UserSimpleDTO;
+import com.blog.VO.auth.UserSimpleVO;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -27,5 +27,5 @@ public class FolderVO {
     /**
      * 用户信息
      */
-    private UserSimpleDTO user;
+    private UserSimpleVO user;
 }

@@ -1,6 +1,6 @@
 package com.blog.VO.post;
 
-import com.blog.VO.auth.UserSimpleDTO;
+import com.blog.VO.auth.UserSimpleVO;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -19,5 +19,5 @@ public class PostSimpleVO {
     private Integer likeCount;
     private Integer favoriteCount;
     private LocalDateTime createdAt;
-    private UserSimpleDTO author;
+    private UserSimpleVO author;
 }
