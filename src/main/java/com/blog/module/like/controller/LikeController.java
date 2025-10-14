@@ -1,7 +1,7 @@
 package com.blog.module.like.controller;
 
-import com.blog.DTO.UserSimpleDTO;
-import com.blog.DTO.post.PostDTO;
+import com.blog.VO.auth.UserSimpleDTO;
+import com.blog.VO.post.PostVO;
 import com.blog.common.PageResult;
 import com.blog.common.Result;
 import com.blog.module.like.service.LikeService;
@@ -113,21 +113,21 @@ public class LikeController {
     @Operation(summary = "获取我点赞的文章列表")
     @GetMapping("/my-posts")
     @PreAuthorize("isAuthenticated()")
-    public Result<PageResult<PostDTO>> getMyLikePosts(
+    public Result<PageResult<PostVO>> getMyLikePosts(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
         Long userId = SecurityUtil.getCurrentUserId();
-        PageResult<PostDTO> posts = likeService.getUserLikePosts(userId, pageNum, pageSize);
+        PageResult<PostVO> posts = likeService.getUserLikePosts(userId, pageNum, pageSize);
         return Result.success(posts);
     }
 
     @Operation(summary = "获取指定用户点赞的文章列表")
     @GetMapping("/user/{userId}/posts")
-    public Result<PageResult<PostDTO>> getUserLikePosts(
+    public Result<PageResult<PostVO>> getUserLikePosts(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
-        PageResult<PostDTO> posts = likeService.getUserLikePosts(userId, pageNum, pageSize);
+        PageResult<PostVO> posts = likeService.getUserLikePosts(userId, pageNum, pageSize);
         return Result.success(posts);
     }
 

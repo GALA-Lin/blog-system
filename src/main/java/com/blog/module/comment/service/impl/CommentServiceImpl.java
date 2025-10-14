@@ -3,7 +3,7 @@ package com.blog.module.comment.service.impl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.blog.DTO.UserSimpleDTO;
+import com.blog.VO.auth.UserSimpleDTO;
 import com.blog.DTO.comment.*;
 import com.blog.common.BusinessException;
 import com.blog.common.PageResult;
