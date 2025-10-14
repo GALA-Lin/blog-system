@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.blog.entity.FavoriteFolder;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -43,4 +44,6 @@ public interface FavoriteFolderMapper extends BaseMapper<FavoriteFolder> {
     Boolean existsByName(@Param("userId") Long userId, @Param("name") String name, @Param("excludeId") Long excludeId);
 
 
+    @Update("UPDATE favorite_folders SET post_count = #{postCount} WHERE id = #{folderId}")
+    void updatePostCount(@Param("folderId") Long folderId, @Param("postCount") Integer postCount);
 }

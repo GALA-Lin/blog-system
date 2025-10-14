@@ -1,6 +1,7 @@
 package com.blog.DTO.favorite;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -12,7 +13,7 @@ import lombok.Data;
 @Data
 public class FavoriteCreateDTO {
 
-    @NotBlank(message = "收藏的文章ID不能为空")
+    @NotNull(message = "收藏的文章ID不能为空")
     private Long postId;
 
     private Long folderId; // null表示收藏到默认收藏夹列表
