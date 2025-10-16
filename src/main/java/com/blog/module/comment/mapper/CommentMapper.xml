@@ -40,7 +40,19 @@
     <!-- Select post comments with author (paginated, top-level only) -->
     <select id="selectPostCommentsWithAuthor" resultMap="CommentWithAuthorMap">
         SELECT
-        c.*,
+        c.id,
+        c.post_id,
+        c.user_id,
+        c.parent_id,
+        c.root_id,
+        c.content,
+        c.status,
+        c.like_count,
+        c.reply_count,
+        c.ip_address,
+        c.user_agent,
+        c.created_at,
+        c.updated_at,
         u.id as author_id,
         u.username as author_username,
         u.nickname as author_nickname,
