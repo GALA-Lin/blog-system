@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.entity.Notification;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
@@ -86,4 +87,37 @@ public interface NotificationMapper extends BaseMapper<Notification> {
     @Update("UPDATE notifications SET is_read = 1 " +
             "WHERE user_id = #{userId} AND type = #{type} AND is_read = 0")
     int markTypeAsRead(@Param("userId") Long userId, @Param("type") String type);
+    /**
+     * 删除已读通知（清理历史）
+     * @param userId 用户id
+     * @return 影响行数
+     */
+    @Delete("DELETE FROM notifications " +
+            "WHERE user_id = #{userId} AND is_read = 1")
+    int deleteReadNotifications(@Param("userId") Long userId);
+
+    /**
+     * 删除指定时间之前的已读通知
+     * @param userId 用户id
+     * @param days 天数
+     * @return 影响行数
+     */
+    @Delete("DELETE FROM notifications " +
+            "WHERE user_id = #{userId} AND is_read = 1 " +
+            "AND created_at < DATE_SUB(NOW(), INTERVAL #{days} DAY)")
+    int deleteOldReadNotifications(@Param("userId") Long userId, @Param("days") Integer days);
+
+    /**
+     * 检查是否存在相同的通知（防止重复）
+     */
+    @Select("SELECT COUNT(*) > 0 FROM notifications " +
+            "WHERE user_id = #{userId} AND sender_id = #{senderId} " +
+            "AND type = #{type} AND related_id = #{relatedId} " +
+            "AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)")
+    Boolean existsSimilarNotification(
+            @Param("userId") Long userId,
+            @Param("senderId") Long senderId,
+            @Param("type") String type,
+            @Param("relatedId") Long relatedId
+    );
 }
