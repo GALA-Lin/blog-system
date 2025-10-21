@@ -17,11 +17,6 @@ import java.time.LocalDateTime;
 public class Notification extends BaseEntity {
 
     /**
-     * 通知ID
-     */
-    private Long id;
-
-    /**
      * 接收通知的用户ID
      */
     private Long userId;

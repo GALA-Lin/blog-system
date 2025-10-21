@@ -15,7 +15,7 @@ import java.io.IOException;
 /**
  * @Author: GALA_Lin
  * @Date: 2025-10-07-15:12
- * @Description:自定义AccessDeniedHandler，用于处理权限不足的情况
+ * @Description: 自定义AccessDeniedHandler，用于处理权限不足的情况
  */
 @Slf4j
 @Component
