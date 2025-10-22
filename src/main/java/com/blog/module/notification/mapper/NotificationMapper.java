@@ -10,6 +10,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Author: GALA_Lin
@@ -47,11 +48,12 @@ public interface NotificationMapper extends BaseMapper<Notification> {
 
     /**
      * 按类型统计未读通知数量
+     *
      * @param userId 用户id
      * @return 未读通知数量
      */
     @Select("SELECT COUNT(*) FROM notifications WHERE user_id = #{userId} AND is_read = 0 GROUP BY type")
-    Long countUnreadByType(@Param("userId") Long userId);
+    List<Map<String, Object>> countUnreadByType(@Param("userId") Long userId);
 
     /**
      * 全部标记已读
