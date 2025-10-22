@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blog.module.notification.mapper.NotificationMapper">
+
+    <!-- ResultMap with Sender -->
+    <resultMap id="NotificationWithSenderMap" type="com.blog.entity.Notification">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="senderId" column="sender_id"/>
+        <result property="type" column="type"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="linkUrl" column="link_url"/>
+        <result property="relatedId" column="related_id"/>
+        <result property="isRead" column="is_read"/>
+        <result property="createdAt" column="created_at"/>
+
+        <!-- 发送者信息 -->
+        <association property="sender" javaType="com.blog.entity.User">
+            <id property="id" column="sender_id"/>
+            <result property="username" column="sender_username"/>
+            <result property="nickname" column="sender_nickname"/>
+            <result property="avatarUrl" column="sender_avatar"/>
+        </association>
+    </resultMap>
+    <!-- 获取用户通知列表（带发送者信息） -->
+    <select id="selectUserNotificationsWithSender" resultMap="NotificationWithSenderMap">
+        SELECT
+        n.id,
+        n.user_id,
+        n.sender_id,
+        n.type,
+        n.title,
+        n.content,
+        n.link_url,
+        n.related_id,
+        n.is_read,
+        n.created_at,
+        u.username as sender_username,
+        u.nickname as sender_nickname,
+        u.avatar_url as sender_avatar
+        FROM notifications n
+        LEFT JOIN users u ON n.sender_id = u.id
+        WHERE n.user_id = #{userId}
+        <if test="type != null and type != ''">
+            AND n.type = #{type}
+        </if>
+        <if test="isRead != null">
+            AND n.is_read = #{isRead}
+        </if>
+        <choose>
+            <when test="sortBy == 'created_at'">
+                ORDER BY n.created_at ${sortOrder}
+            </when>
+            <otherwise>
+                ORDER BY n.created_at DESC
+            </otherwise>
+        </choose>
+    </select>
+</mapper>
