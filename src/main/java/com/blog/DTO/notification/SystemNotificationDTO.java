@@ -25,6 +25,9 @@ public class SystemNotificationDTO {
     @Size(max = 500, message = "内容不能超过500个字符")
     private String content;
 
+    private Long senderId;
+
+
     /**
      * 相关链接（可选）
      */

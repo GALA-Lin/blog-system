@@ -4,10 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.entity.Notification;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 import java.util.Map;
@@ -17,6 +14,7 @@ import java.util.Map;
  * @Date: 2025-10-21-16:57
  * @Description:
  */
+@Mapper
 public interface NotificationMapper extends BaseMapper<Notification> {
 
     /**
@@ -69,7 +67,7 @@ public interface NotificationMapper extends BaseMapper<Notification> {
      * @param ids 通知id列表
      * @return 影响行数
      */
-    @Update(
+    @Update({
             "<script>",
             "UPDATE notifications SET is_read = 1 ",
             "WHERE user_id = #{userId} AND id IN",
@@ -77,7 +75,7 @@ public interface NotificationMapper extends BaseMapper<Notification> {
             "#{id}",
             "</foreach>",
             "</script>"
-    )
+    })
     int batchMarkAsRead(@Param("userId") Long userId, @Param("ids") List<Long> ids);
 
     /**
