@@ -370,46 +370,104 @@ public class NotificationServiceImpl implements INotificationService {
 
         return stats;
     }
+    // ========== 标记已读 ==========
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void markAsRead(Long notificationId, Long userId) {
+        Notification notification = notificationMapper.selectById(notificationId);
 
+        if (notification == null) {
+            throw new BusinessException("通知不存在");
+        }
+
+        if (!notification.getUserId().equals(userId)) {
+            throw new BusinessException("无权操作此通知");
+        }
+
+        if (notification.getIsRead() == 0) {
+            notification.setIsRead(1);
+            notificationMapper.updateById(notification);
+        }
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void batchMarkAsRead(List<Long> ids, Long userId) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
 
+        int updated = notificationMapper.batchMarkAsRead(userId, ids);
+        log.info("批量标记已读: userId={}, count={}", userId, updated);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void markAllAsRead(Long userId) {
-
+        int updated = notificationMapper.markAllRead(userId);
+        log.info("标记全部已读: userId={}, count={}", userId, updated);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void markTypeAsRead(String type, Long userId) {
-
+        int updated = notificationMapper.markTypeAsRead(userId, type);
+        log.info("标记类型已读: userId={}, type={}, count={}", userId, type, updated);
     }
 
+    // ========== 删除通知 ==========
+
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteNotification(Long notificationId, Long userId) {
+        Notification notification = notificationMapper.selectById(notificationId);
 
+        if (notification == null) {
+            throw new BusinessException("通知不存在");
+        }
+
+        if (!notification.getUserId().equals(userId)) {
+            throw new BusinessException("无权删除此通知");
+        }
+
+        notificationMapper.deleteById(notificationId);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void batchDeleteNotifications(List<Long> ids, Long userId) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
 
+        // 验证所有通知都属于当前用户
+        List<Notification> notifications = notificationMapper.selectBatchIds(ids);
+        for (Notification notification : notifications) {
+            if (!notification.getUserId().equals(userId)) {
+                throw new BusinessException("无权删除部分通知");
+            }
+        }
+
+        notificationMapper.deleteBatchIds(ids);
+        log.info("批量删除通知: userId={}, count={}", userId, ids.size());
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void clearReadNotifications(Long userId) {
-
+        int deleted = notificationMapper.deleteReadNotifications(userId);
+        log.info("清空已读通知: userId={}, count={}", userId, deleted);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void cleanOldNotifications(Long userId, Integer days) {
-
+        int deleted = notificationMapper.deleteOldReadNotifications(userId, days);
+        log.info("清理历史通知: userId={}, days={}, count={}", userId, days, deleted);
     }
+
+    // ========== 私有辅助方法 ==========
 
     /**
      * 转换通知实体为 VO
