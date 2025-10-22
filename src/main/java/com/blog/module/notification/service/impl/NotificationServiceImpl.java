@@ -372,6 +372,11 @@ public class NotificationServiceImpl implements INotificationService {
     }
     // ========== 标记已读 ==========
 
+    /**
+     * 标记通知为已读
+     * @param notificationId 通知ID
+     * @param userId 用户ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void markAsRead(Long notificationId, Long userId) {
@@ -391,6 +396,11 @@ public class NotificationServiceImpl implements INotificationService {
         }
     }
 
+    /**
+     * 批量标记通知为已读
+     * @param ids 通知ID列表
+     * @param userId 用户ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void batchMarkAsRead(List<Long> ids, Long userId) {
@@ -402,6 +412,10 @@ public class NotificationServiceImpl implements INotificationService {
         log.info("批量标记已读: userId={}, count={}", userId, updated);
     }
 
+    /**
+     * 标记全部通知为已读
+     * @param userId 用户ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void markAllAsRead(Long userId) {
@@ -409,6 +423,11 @@ public class NotificationServiceImpl implements INotificationService {
         log.info("标记全部已读: userId={}, count={}", userId, updated);
     }
 
+    /**
+     * 标记指定类型通知为已读
+     * @param type 通知类型
+     * @param userId 用户ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void markTypeAsRead(String type, Long userId) {
@@ -418,6 +437,11 @@ public class NotificationServiceImpl implements INotificationService {
 
     // ========== 删除通知 ==========
 
+    /**
+     * 删除通知
+     * @param notificationId 通知ID
+     * @param userId 用户ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteNotification(Long notificationId, Long userId) {
@@ -434,6 +458,11 @@ public class NotificationServiceImpl implements INotificationService {
         notificationMapper.deleteById(notificationId);
     }
 
+    /**
+     * 批量删除通知
+     * @param ids 通知ID列表
+     * @param userId 用户ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void batchDeleteNotifications(List<Long> ids, Long userId) {
@@ -453,6 +482,10 @@ public class NotificationServiceImpl implements INotificationService {
         log.info("批量删除通知: userId={}, count={}", userId, ids.size());
     }
 
+    /**
+     * 清空已读通知
+     * @param userId 用户ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void clearReadNotifications(Long userId) {
@@ -460,6 +493,11 @@ public class NotificationServiceImpl implements INotificationService {
         log.info("清空已读通知: userId={}, count={}", userId, deleted);
     }
 
+    /**
+     * 清理历史通知
+     * @param userId 用户ID
+     * @param days 天数
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void cleanOldNotifications(Long userId, Integer days) {
@@ -471,6 +509,8 @@ public class NotificationServiceImpl implements INotificationService {
 
     /**
      * 转换通知实体为 VO
+     * @param notification 通知实体
+     * @return 通知 VO
      */
     private NotificationVO convertToVO(Notification notification) {
         NotificationVO vo = new NotificationVO();
@@ -497,28 +537,25 @@ public class NotificationServiceImpl implements INotificationService {
 
     /**
      * 获取通知类型显示文本
+     * @param type 通知类型
+     * @return 通知类型显示文本
      */
     private String getTypeText(String type) {
-        switch (type) {
-            case "COMMENT":
-                return "评论";
-            case "REPLY":
-                return "回复";
-            case "LIKE":
-                return "点赞";
-            case "FAVORITE":
-                return "收藏";
-            case "FOLLOW":
-                return "关注";
-            case "SYSTEM":
-                return "系统通知";
-            default:
-                return "未知";
-        }
+        return switch (type) {
+            case "COMMENT" -> "评论";
+            case "REPLY" -> "回复";
+            case "LIKE" -> "点赞";
+            case "FAVORITE" -> "收藏";
+            case "FOLLOW" -> "关注";
+            case "SYSTEM" -> "系统通知";
+            default -> "未知";
+        };
     }
 
     /**
      * 获取相对时间（如：3分钟前）
+     * @param dateTime 时间
+     * @return 相对时间
      */
     private String getRelativeTime(LocalDateTime dateTime) {
         Duration duration = Duration.between(dateTime, LocalDateTime.now());
