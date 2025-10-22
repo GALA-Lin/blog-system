@@ -199,6 +199,8 @@ springdoc:
       paths-to-match: '/likes/**'
     - group: 'Favorite API'
       paths-to-match: '/favorites/**'
+    - group: 'Notification API'
+      paths-to-match: '/notifications/**'
 
 knife4j:
   enable: true
