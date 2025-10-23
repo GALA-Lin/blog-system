@@ -17,6 +17,7 @@ import com.blog.module.auth.mapper.UserMapper;
 import com.blog.module.notification.mapper.NotificationMapper;
 import com.blog.module.notification.service.INotificationService;
 import com.blog.module.post.mapper.PostMapper;
+import com.blog.util.SecurityUtil;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -242,15 +243,14 @@ public class NotificationServiceImpl implements INotificationService {
     @Transactional(rollbackFor = Exception.class)
     public void createSystemNotification(SystemNotificationDTO dto) {
         // 新增：校验发送者合法性（必须有发送者，且发送者存在）
-        Long senderId = dto.getSenderId();
+        Long senderId = SecurityUtil.getCurrentUserId();
         if (senderId == null) {
-            log.error("创建系统通知失败：发送者ID不能为空");
-            return; // 发送者ID为空，直接返回
+            throw new BusinessException("创建系统通知失败：发送者ID不能为空");
         }
         User sender = userMapper.selectById(senderId);
         if (sender == null) {
             log.error("创建系统通知失败：发送者不存在（senderId={}）", senderId);
-            return; // 发送者不存在，直接返回
+            throw new BusinessException("创建系统通知失败：发送者不存在");
         }
 
         // 原有逻辑：根据接收者列表（或全体用户）创建通知，新增传递senderId
@@ -258,22 +258,18 @@ public class NotificationServiceImpl implements INotificationService {
             // 全体用户通知
             List<User> allUsers = userMapper.selectList(null);
             for (User user : allUsers) {
-                // 调用修改后的方法，传入senderId
                 createSystemNotificationForUser(user.getId(), dto, senderId);
             }
         } else {
             // 指定用户通知
             for (Long userId : dto.getUserIds()) {
-                // 可选：跳过给发送者自己发通知（同关注通知逻辑，根据业务需求决定）
                 if (userId.equals(senderId)) {
                     continue;
                 }
-                // 调用修改后的方法，传入senderId
                 createSystemNotificationForUser(userId, dto, senderId);
             }
         }
 
-        // 日志增强：添加发送者ID，便于追踪
         log.info("创建系统通知成功: senderId={}, userCount={}, title={}",
                 senderId,
                 dto.getUserIds() != null ? dto.getUserIds().size() : "全体用户",
