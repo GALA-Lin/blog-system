@@ -201,6 +201,8 @@ springdoc:
       paths-to-match: '/favorites/**'
     - group: 'Notification API'
       paths-to-match: '/notifications/**'
+    - group: 'File API'
+      paths-to-match: '/files/**'
 
 knife4j:
   enable: true
