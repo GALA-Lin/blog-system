@@ -15,57 +15,54 @@ import java.util.List;
  * @Description:
  */
 
+public interface NotificationService {
 
-/**
- * 通知服务接口
- */
-public interface INotificationService {
-
-    // ========== 创建通知 ==========
+    // ========== 创建通知（通过 MQ 异步处理）==========
 
     /**
-     * 创建评论通知
+     * 发送评论通知（异步）
      * @param recipientId 接收者ID（文章作者）
      * @param senderId 发送者ID（评论者）
      * @param commentId 评论ID
      * @param postId 文章ID
      */
-    void createCommentNotification(Long recipientId, Long senderId, Long commentId, Long postId);
+    void sendCommentNotification(Long recipientId, Long senderId, Long commentId, Long postId);
 
     /**
-     * 创建回复通知
+     * 发送回复通知（异步）
      * @param recipientId 接收者ID（被回复的用户）
      * @param senderId 发送者ID（回复者）
      * @param commentId 评论ID
      * @param postId 文章ID
      */
-    void createReplyNotification(Long recipientId, Long senderId, Long commentId, Long postId);
+    void sendReplyNotification(Long recipientId, Long senderId, Long commentId, Long postId);
 
     /**
-     * 创建点赞通知
+     * 发送点赞通知（异步）
      * @param recipientId 接收者ID（文章/评论作者）
      * @param senderId 发送者ID（点赞者）
      * @param relatedId 相关ID（文章ID或评论ID）
+     * @param type 点赞类型：LIKE, LIKE_COMMENT
      */
-    void createLikeNotification(Long recipientId, Long senderId, Long relatedId);
+    void sendLikeNotification(Long recipientId, Long senderId, Long relatedId, String type);
 
     /**
-     * 创建收藏通知
+     * 发送收藏通知（异步）
      * @param recipientId 接收者ID（文章作者）
      * @param senderId 发送者ID（收藏者）
      * @param postId 文章ID
      */
-    void createFavoriteNotification(Long recipientId, Long senderId, Long postId);
+    void sendFavoriteNotification(Long recipientId, Long senderId, Long postId);
 
     /**
-     * 创建关注通知
+     * 发送关注通知（异步）
      * @param recipientId 接收者ID（被关注的用户）
      * @param senderId 发送者ID（关注者）
      */
-    void createFollowNotification(Long recipientId, Long senderId);
+    void sendFollowNotification(Long recipientId, Long senderId);
 
     /**
-     * 创建系统通知
+     * 创建系统通知（管理员使用）
      * @param dto 系统通知DTO
      */
     void createSystemNotification(SystemNotificationDTO dto);
@@ -89,14 +86,14 @@ public interface INotificationService {
     NotificationVO getNotificationDetail(Long notificationId, Long userId);
 
     /**
-     * 获取未读通知数量
+     * 获取未读通知数量（优先从 Redis 获取）
      * @param userId 用户ID
      * @return 未读数量
      */
     Long getUnreadCount(Long userId);
 
     /**
-     * 获取通知统计信息
+     * 获取通知统计信息（Redis + DB）
      * @param userId 用户ID
      * @return 统计信息
      */
@@ -105,7 +102,7 @@ public interface INotificationService {
     // ========== 标记已读 ==========
 
     /**
-     * 标记通知为已读
+     * 标记通知为已读（Redis + DB）
      * @param notificationId 通知ID
      * @param userId 用户ID
      */
