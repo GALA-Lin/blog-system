@@ -1,5 +1,6 @@
 package com.blog.DTO.mq;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,6 +24,7 @@ public class CountSyncMessage implements Serializable {
     private String type; // LIKE_POST, LIKE_COMMENT, FAVORITE, COMMENT
     private Long targetId;
     private Integer delta; // 增量：+1 或 -1
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime timestamp;
 
 }
