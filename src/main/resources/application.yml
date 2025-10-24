@@ -78,6 +78,7 @@ spring:
     publisher-returns: true
     template:
       mandatory: true
+      message-converter: jackson2
 
   # File Upload Configuration
   servlet:
