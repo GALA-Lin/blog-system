@@ -2,10 +2,13 @@ package com.blog.module.like.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.blog.DTO.mq.*;
 import com.blog.VO.auth.UserSimpleVO;
 import com.blog.VO.post.PostVO;
 import com.blog.common.BusinessException;
 import com.blog.common.PageResult;
+import com.blog.config.RabbitMQConfig;
+import com.blog.constants.SystemConstants;
 import com.blog.entity.*;
 import com.blog.module.comment.mapper.CommentMapper;
 import com.blog.module.like.mapper.CommentLikeMapper;
@@ -15,13 +18,15 @@ import com.blog.module.notification.service.INotificationService;
 import com.blog.module.post.mapper.PostMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -33,12 +38,22 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class LikeServiceImpl implements LikeService {
+
     private final PostLikeMapper postLikeMapper;
     private final CommentLikeMapper commentLikeMapper;
     private final PostMapper postMapper;
     private final CommentMapper commentMapper;
     private final INotificationService notificationService;
 
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final RabbitTemplate rabbitTemplate;
+
+    /**
+     * 文章点赞 Redis + RabbitMQ 实现
+     * @param postId 文章ID
+     * @param userId 用户ID
+     * @return
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean likePost(Long postId, Long userId) {
@@ -50,61 +65,140 @@ public class LikeServiceImpl implements LikeService {
         if (post.getStatus() !=1){
             throw new BusinessException("文章未发布");
         }
+
+        String userLikeKey = String.format(SystemConstants.KEY_USER_LIKED_POSTS, userId);
+        String postLikeCountKey = String.format(SystemConstants.KEY_POST_LIKE_COUNT, postId);
+
+        // 检查Redis中是否已经点赞
+        Boolean isMember = redisTemplate.opsForSet().isMember(userLikeKey, postId);
+        if (Boolean.TRUE.equals(isMember)) {
+            log.info("【Redis检测】用户{}已点赞文章{}", userId, postId);
+            return false;
+        }
+
         // 检查是否已经点赞
         if (Boolean.TRUE.equals(postLikeMapper.isLikedByUser(postId, userId))) {
             return false; // 已经点赞过
         }
-        try{
-            PostLike postLike = new PostLike();
-            postLike.setPostId(postId);
-            postLike.setUserId(userId);
-            postLikeMapper.insert(postLike);
-            postMapper.incrementLikeCount(postId);
-            if (!post.getUserId().equals(userId)) {
-                try {
-                    notificationService.createLikeNotification(post.getUserId(), userId, postId);
-                } catch (Exception e) {
-                    log.error("发送点赞通知失败", e);
-                }
-            }
 
-            return true;
-        } catch (DuplicateKeyException e) {
-            // 唯一索引冲突，说明已点赞
-            log.warn("重复点赞: postId={}, userId={}", postId, userId);
-            return false;
+        // 更新Redis缓存
+        log.info("【Redis更新】用户{}点赞文章{}", userId, postId);
+        redisTemplate.opsForSet().add(userLikeKey, postId);
+        redisTemplate.expire(userLikeKey, 7, TimeUnit.DAYS);
+
+        // 增加点赞计数
+        redisTemplate.opsForValue().increment(postLikeCountKey, 1);
+        redisTemplate.expire(postLikeCountKey, 7, TimeUnit.DAYS);
+
+        // 发送MQ消息 - 异步更新数据库
+        LikeMessage likeMessage = LikeMessage.builder()
+                .messageId(UUID.randomUUID().toString())
+                .userId(userId)
+                .targetId(postId)
+                .targetType("POST")
+                .action("LIKE")
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        log.info("【MQ发送】点赞消息: {}", likeMessage);
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.LIKE_EXCHANGE,
+                RabbitMQConfig.LIKE_POST_ROUTING_KEY,
+                likeMessage
+        );
+
+        // 发送通知MQ
+        if (!post.getUserId().equals(userId)) {
+            NotificationMessage notificationMessage = NotificationMessage.builder()
+                    .messageId(UUID.randomUUID().toString())
+                    .recipientId(post.getUserId())
+                    .senderId(userId)
+                    .type("LIKE")
+                    .relatedId(postId)
+                    .timestamp(LocalDateTime.now())
+                    .build();
+
+            log.info("【MQ发送】通知消息: {}", notificationMessage);
+            rabbitTemplate.convertAndSend(
+                    RabbitMQConfig.NOTIFICATION_EXCHANGE,
+                    "notification.like",
+                    notificationMessage
+            );
         }
+
+        return true;
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public Boolean unlikePost(Long postId, Long userId) {
-        // 删除点赞记录
-        int deleted = postLikeMapper.deleteByPostAndUser(postId, userId);
+        // Redis缓存Key
+        String userLikeKey = String.format(SystemConstants.KEY_USER_LIKED_POSTS, userId);
+        String postLikeCountKey = String.format(SystemConstants.KEY_POST_LIKE_COUNT, postId);
 
-        if (deleted > 0) {
-            postMapper.decrementLikeCount(postId);
-            return true;
+        // 检查是否已点赞
+        Boolean isMember = redisTemplate.opsForSet().isMember(userLikeKey, postId);
+        if (Boolean.FALSE.equals(isMember)) {
+            log.info("【Redis检测】用户{}未点赞文章{}", userId, postId);
+            return false;
         }
 
-        return false; // 未点赞过
+        // 更新Redis缓存
+        log.info("【Redis更新】用户{}取消点赞文章{}", userId, postId);
+        redisTemplate.opsForSet().remove(userLikeKey, postId);
+        redisTemplate.opsForValue().decrement(postLikeCountKey, 1);
+
+        // 发送MQ消息
+        LikeMessage likeMessage = LikeMessage.builder()
+                .messageId(UUID.randomUUID().toString())
+                .userId(userId)
+                .targetId(postId)
+                .targetType("POST")
+                .action("UNLIKE")
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        log.info("【MQ发送】取消点赞消息: {}", likeMessage);
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.LIKE_EXCHANGE,
+                RabbitMQConfig.LIKE_POST_ROUTING_KEY,
+                likeMessage
+        );
+
+        return true;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean togglePostLike(Long postId, Long userId) {
         if (Boolean.TRUE.equals(isPostLiked(postId, userId))) {
-            unlikePost(postId, userId);
-            return false; // 取消点赞
+            return !unlikePost(postId, userId);
         } else {
-            likePost(postId, userId);
-            return true; // 点赞
+            return likePost(postId, userId);
         }
     }
 
     @Override
     public Boolean isPostLiked(Long postId, Long userId) {
-        return postLikeMapper.isLikedByUser(postId, userId);
+        // 优先从Redis查询
+        String userLikeKey = String.format(SystemConstants.KEY_USER_LIKED_POSTS, userId);
+        Boolean isMember = redisTemplate.opsForSet().isMember(userLikeKey, postId);
+
+        if (isMember != null) {
+            log.debug("【Redis查询】用户{}点赞状态: {}", userId, isMember);
+            return isMember;
+        }
+
+        // Redis未命中，从数据库查询
+        log.debug("【数据库查询】用户{}点赞状态", userId);
+        Boolean liked = postLikeMapper.isLikedByUser(postId, userId);
+
+        // 回写Redis
+        if (Boolean.TRUE.equals(liked)) {
+            redisTemplate.opsForSet().add(userLikeKey, postId);
+            redisTemplate.expire(userLikeKey, 7, TimeUnit.DAYS);
+        }
+
+        return liked;
     }
 
     @Override
@@ -113,11 +207,38 @@ public class LikeServiceImpl implements LikeService {
             return new HashMap<>();
         }
 
-        List<Long> likedPostIds = postLikeMapper.selectLikedPostIdsByUser(postIds, userId);
+        String userLikeKey = String.format(SystemConstants.KEY_USER_LIKED_POSTS, userId);
+        Map<Long, Boolean> result = new HashMap<>(postIds.size());
+        List<Long> unHitPostIds = new ArrayList<>(); // 存储Redis未命中的postId
 
-        Map<Long, Boolean> result = new HashMap<>();
+        // 1. 批量查Redis，区分命中和未命中
         for (Long postId : postIds) {
-            result.put(postId, likedPostIds.contains(postId));
+            Boolean isMember = redisTemplate.opsForSet().isMember(userLikeKey, postId);
+            if (isMember != null) {
+                result.put(postId, isMember); // Redis命中，直接存入结果
+            } else {
+                unHitPostIds.add(postId); // Redis未命中，加入待查数据库列表
+            }
+        }
+
+        // 2. 若有未命中的，批量查数据库
+        if (!unHitPostIds.isEmpty()) {
+
+            List<Long> likedPostIds = postLikeMapper.selectLikedPostIdsByUser(unHitPostIds, userId);
+
+            // 3. 处理数据库结果，补全缓存和结果
+            for (Long postId : unHitPostIds) {
+                boolean isLiked = likedPostIds.contains(postId);
+                result.put(postId, isLiked); // 存入结果
+
+                // 4. 回写Redis（只存已点赞的，未点赞的不存，减少缓存占用）
+                if (isLiked) {
+                    redisTemplate.opsForSet().add(userLikeKey, postId);
+                }
+            }
+
+            // 统一设置过期时间（避免重复调用expire）
+            redisTemplate.expire(userLikeKey, 7, TimeUnit.DAYS);
         }
 
         return result;
@@ -186,10 +307,10 @@ public class LikeServiceImpl implements LikeService {
 
     // ========== 评论点赞实现 ==========
 
+
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public Boolean likeComment(Long commentId, Long userId) {
-        // 验证评论是否存在
+        // 验证评论
         Comment comment = commentMapper.selectCommentWithAuthor(commentId);
         if (comment == null) {
             throw new BusinessException("评论不存在");
@@ -197,80 +318,137 @@ public class LikeServiceImpl implements LikeService {
         if (comment.getStatus() != 1) {
             throw new BusinessException("评论不可用");
         }
-        // 检查是否已经点赞
-        if (Boolean.TRUE.equals(commentLikeMapper.isLikedByUser(commentId, userId))) {
-            return false; // 已经点赞过
-        }
-        try {
-            CommentLike commentLike = new CommentLike();
-            commentLike.setCommentId(commentId);
-            commentLike.setUserId(userId);
-            commentLikeMapper.insert(commentLike);
-            commentMapper.incrementLikeCount(commentId);
 
-            // 发送通知（不给自己发）
-            if (!comment.getUserId().equals(userId)) {
-                try {
-                    // 根据实际的通知服务接口调整方法名和参数
-                    // 可能的方法名：createCommentLikeNotification 或 createLikeNotification
-                    notificationService.createLikeNotification(
-                            comment.getUserId(), // 接收通知的用户（评论作者）
-                            userId,              // 点赞的用户
-                            commentId            // 评论ID
-                    );
-                } catch (Exception e) {
-                    log.error("发送评论点赞通知失败: commentId={}, userId={}", commentId, userId, e);
-                }
-            }
-            return true;
-        } catch (DuplicateKeyException e) {
-            // 唯一索引冲突，说明已点赞
-            log.warn("重复点赞评论: commentId={}, userId={}", commentId, userId);
+        // Redis Key
+        String userLikeKey = String.format(SystemConstants.KEY_USER_LIKED_COMMENTS, userId);
+        String commentLikeCountKey = String.format(SystemConstants.KEY_COMMENT_LIKE_COUNT, commentId);
+
+        // 检查是否已点赞
+        Boolean isMember = redisTemplate.opsForSet().isMember(userLikeKey, commentId);
+        if (Boolean.TRUE.equals(isMember)) {
             return false;
         }
+
+        // 更新Redis
+        log.info("【Redis更新】用户{}点赞评论{}", userId, commentId);
+        redisTemplate.opsForSet().add(userLikeKey, commentId);
+        redisTemplate.expire(userLikeKey, 7, TimeUnit.DAYS);
+        redisTemplate.opsForValue().increment(commentLikeCountKey, 1);
+        redisTemplate.expire(commentLikeCountKey, 7, TimeUnit.DAYS);
+
+        // 发送MQ消息
+        LikeMessage likeMessage = LikeMessage.builder()
+                .messageId(UUID.randomUUID().toString())
+                .userId(userId)
+                .targetId(commentId)
+                .targetType("COMMENT")
+                .action("LIKE")
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        log.info("【MQ发送】评论点赞消息: {}", likeMessage);
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.LIKE_EXCHANGE,
+                RabbitMQConfig.LIKE_COMMENT_ROUTING_KEY,
+                likeMessage
+        );
+
+        // 发送通知
+        if (!comment.getUserId().equals(userId)) {
+            NotificationMessage notificationMessage = NotificationMessage.builder()
+                    .messageId(UUID.randomUUID().toString())
+                    .recipientId(comment.getUserId())
+                    .senderId(userId)
+                    .type("LIKE_COMMENT")
+                    .relatedId(commentId)
+                    .timestamp(LocalDateTime.now())
+                    .build();
+
+            rabbitTemplate.convertAndSend(
+                    RabbitMQConfig.NOTIFICATION_EXCHANGE,
+                    "notification.like",
+                    notificationMessage
+            );
+        }
+
+        return true;
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public Boolean unlikeComment(Long commentId, Long userId) {
-        // 删除点赞记录
-        int deleted = commentLikeMapper.deleteByCommentAndUser(commentId, userId);
+        String userLikeKey = String.format(SystemConstants.KEY_USER_LIKED_COMMENTS, userId);
+        String commentLikeCountKey = String.format(SystemConstants.KEY_COMMENT_LIKE_COUNT, commentId);
 
-        if (deleted > 0) {
-            commentMapper.decrementLikeCount(commentId);
-            return true;
+        Boolean isMember = redisTemplate.opsForSet().isMember(userLikeKey, commentId);
+        if (Boolean.FALSE.equals(isMember)) {
+            return false;
         }
 
-        return false; // 未点赞过
+        // 更新Redis
+        log.info("【Redis更新】用户{}取消点赞评论{}", userId, commentId);
+        redisTemplate.opsForSet().remove(userLikeKey, commentId);
+        redisTemplate.opsForValue().decrement(commentLikeCountKey, 1);
+
+        // 发送MQ消息
+        LikeMessage likeMessage = LikeMessage.builder()
+                .messageId(UUID.randomUUID().toString())
+                .userId(userId)
+                .targetId(commentId)
+                .targetType("COMMENT")
+                .action("UNLIKE")
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.LIKE_EXCHANGE,
+                RabbitMQConfig.LIKE_COMMENT_ROUTING_KEY,
+                likeMessage
+        );
+
+        return true;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean toggleCommentLike(Long commentId, Long userId) {
         if (Boolean.TRUE.equals(isCommentLiked(commentId, userId))) {
-            unlikeComment(commentId, userId);
-            return false; // 取消点赞
+            return !unlikeComment(commentId, userId);
         } else {
-            likeComment(commentId, userId);
-            return true; // 点赞
+            return likeComment(commentId, userId);
         }
     }
+
     @Override
     public Boolean isCommentLiked(Long commentId, Long userId) {
-        return commentLikeMapper.isLikedByUser(commentId, userId);
+        String userLikeKey = String.format(SystemConstants.KEY_USER_LIKED_COMMENTS, userId);
+        Boolean isMember = redisTemplate.opsForSet().isMember(userLikeKey, commentId);
+
+        if (isMember != null) {
+            return isMember;
+        }
+
+        Boolean liked = commentLikeMapper.isLikedByUser(commentId, userId);
+        if (Boolean.TRUE.equals(liked)) {
+            redisTemplate.opsForSet().add(userLikeKey, commentId);
+            redisTemplate.expire(userLikeKey, 7, TimeUnit.DAYS);
+        }
+
+        return liked;
     }
 
+    //TODO: 数据库查询兜底
     @Override
     public Map<Long, Boolean> batchCheckCommentLikes(List<Long> commentIds, Long userId) {
         if (commentIds == null || commentIds.isEmpty()) {
             return new HashMap<>();
         }
 
-        List<Long> likedCommentIds = commentLikeMapper.selectLikedCommentIdsByUser(commentIds, userId);
-
+        String userLikeKey = String.format(SystemConstants.KEY_USER_LIKED_COMMENTS, userId);
         Map<Long, Boolean> result = new HashMap<>();
+
         for (Long commentId : commentIds) {
-            result.put(commentId, likedCommentIds.contains(commentId));
+            Boolean isMember = redisTemplate.opsForSet().isMember(userLikeKey, commentId);
+            result.put(commentId, Boolean.TRUE.equals(isMember));
         }
 
         return result;
