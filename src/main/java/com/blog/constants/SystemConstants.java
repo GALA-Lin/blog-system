@@ -52,6 +52,8 @@ public interface SystemConstants {
     // Redis Keys for Favorite System
     String KEY_USER_FAVORITED_POSTS = "user:%d:favorited:posts";
     String KEY_POST_FAVORITE_COUNT = "post:%d:favorite_count";
+    String KEY_USER_UNREAD_COUNT = "notification:user:%d:unread";
+    String KEY_USER_UNREAD_BY_TYPE = "notification:user:%d:type:%s";
 
     // Login Attempts
     String KEY_LOGIN_ATTEMPTS = "login:attempts:%s";
