@@ -17,7 +17,7 @@ import com.blog.module.auth.mapper.UserMapper;
 import com.blog.module.favorite.mapper.FavoriteFolderMapper;
 import com.blog.module.favorite.mapper.FavoriteMapper;
 import com.blog.module.favorite.service.FavoriteService;
-import com.blog.module.notification.service.INotificationService;
+import com.blog.module.notification.service.NotificationService;
 import com.blog.module.post.mapper.PostMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +44,7 @@ public class FavoriteServiceImpl implements  FavoriteService {
     private final FavoriteFolderMapper favoriteFolderMapper;
     private final FavoriteMapper favoriteMapper;
     private final PostMapper postMapper;
-    private final INotificationService notificationService;
+    private final NotificationService notificationService;
     private final UserMapper userMapper;
 
     // ========== 收藏夹管理 ==========
@@ -258,10 +258,14 @@ public class FavoriteServiceImpl implements  FavoriteService {
 
             // 更新文章收藏数
             postMapper.incrementFavoriteCount(dto.getPostId());
-            // 发送通知（异步）
+            // 发送通知
             if (!post.getUserId().equals(userId)) {
                 try {
-                    notificationService.createFavoriteNotification(post.getUserId(), userId, dto.getPostId());
+                    notificationService.sendFavoriteNotification(
+                            post.getUserId(),    // 接收者：文章作者
+                            userId,              // 发送者：收藏用户
+                            dto.getPostId()      // 相关ID：文章ID
+                    );
                 } catch (Exception e) {
                     log.error("发送收藏通知失败", e);
                 }
@@ -386,7 +390,7 @@ public class FavoriteServiceImpl implements  FavoriteService {
         }
 
         // 获取所有要移动的收藏记录
-        List<Favorite> favorites = favoriteMapper.selectBatchIds(dto.getFavoriteIds());
+        List<Favorite> favorites = favoriteMapper   .selectBatchIds(dto.getFavoriteIds());
 
         // 统计各收藏夹的变化
         Map<Long, Integer> folderChanges = new HashMap<>();

@@ -12,7 +12,7 @@ import com.blog.entity.Comment;
 import com.blog.entity.Post;
 import com.blog.module.comment.mapper.CommentMapper;
 import com.blog.module.comment.service.ICommentService;
-import com.blog.module.notification.service.INotificationService;
+import com.blog.module.notification.service.NotificationService;
 import com.blog.module.post.mapper.PostMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     private final CommentMapper commentMapper;
     private final PostMapper postMapper;
-    private final INotificationService notificationService;
+    private final NotificationService notificationService;
 
     /**
      * 创建评论
@@ -96,21 +96,29 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
 
         // 发送通知
-        // TODO: 临时service,异步发送通知
         try {
-            // 通知作者
+            // 通知文章作者
             if (!post.getUserId().equals(userId)) {
-                notificationService.createCommentNotification(post.getUserId(), userId, comment.getId(), post.getId());
+                notificationService.sendCommentNotification(
+                        post.getUserId(),   // 接收者：文章作者
+                        userId,             // 发送者：评论用户
+                        comment.getId(),    // 评论ID
+                        post.getId()        // 文章ID
+                );
             }
 
             // 通知被回复者
             if (comment.getReplyToUserId() != null && !comment.getReplyToUserId().equals(userId)) {
-                notificationService.createReplyNotification(comment.getReplyToUserId(), userId, comment.getId(), post.getId());
+                notificationService.sendReplyNotification(
+                        comment.getReplyToUserId(),  // 接收者：被回复用户
+                        userId,                       // 发送者：回复用户
+                        comment.getId(),              // 评论ID
+                        post.getId()                  // 文章ID
+                );
             }
         } catch (Exception e) {
-            log.error("未能发送通知", e);
+            log.error("发送评论通知失败", e);
         }
-
         return getCommentDetail(comment.getId(), userId);
     }
     // 更新父评论的 reply_count
