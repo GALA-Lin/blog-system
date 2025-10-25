@@ -45,13 +45,22 @@ public interface NotificationMapper extends BaseMapper<Notification> {
     Long countUnread(@Param("userId") Long userId);
 
     /**
-     * 按类型统计未读通知数量
-     *
-     * @param userId 用户id
-     * @return 未读通知数量
+     * 统计指定类型的未读通知数量
+     * @param userId 用户ID
+     * @param type 通知类型
+     * @return 未读数量
      */
-    @Select("SELECT COUNT(*) FROM notifications WHERE user_id = #{userId} AND is_read = 0 GROUP BY type")
-    List<Map<String, Object>> countUnreadByType(@Param("userId") Long userId);
+    @Select("SELECT COUNT(*) FROM notifications WHERE user_id = #{userId} AND type = #{type} AND is_read = 0")
+    Long countUnreadByType(@Param("userId") Long userId, @Param("type") String type);
+    /**
+     * 按类型分组统计未读通知（用于统计页面）
+     * @param userId 用户ID
+     * @return 各类型未读数量列表
+     */
+    @Select("SELECT type, COUNT(*) as count FROM notifications " +
+            "WHERE user_id = #{userId} AND is_read = 0 " +
+            "GROUP BY type")
+    List<Map<String, Object>> countUnreadGroupByType(@Param("userId") Long userId);
 
     /**
      * 全部标记已读
