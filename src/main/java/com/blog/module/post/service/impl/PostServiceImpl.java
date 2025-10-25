@@ -135,7 +135,7 @@ public class PostServiceImpl implements PostService {
     }
 
     private List<CategoryVO> loadCategoriesForPost(Long postId) {
-        // 方法 1: 使用 MyBatis-Plus (简单但需要多次查询)
+
         LambdaQueryWrapper<PostCategory> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(PostCategory::getPostId, postId);
         List<PostCategory> postCategories = postCategoryMapper.selectList(wrapper);
