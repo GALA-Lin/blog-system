@@ -1,5 +1,8 @@
 package com.blog.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
@@ -18,6 +21,7 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 public class RabbitMQConfig {
+
     // ==================== 交换机名称 ====================
     public static final String LIKE_EXCHANGE = "blog.like.exchange";
     public static final String FAVORITE_EXCHANGE = "blog.favorite.exchange";
@@ -57,7 +61,10 @@ public class RabbitMQConfig {
      */
     @Bean
     public MessageConverter messageConverter() {
-        return new Jackson2JsonMessageConverter();
+        ObjectMapper om = new ObjectMapper();
+        om.registerModule(new JavaTimeModule());   // 关键
+        om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return new Jackson2JsonMessageConverter(om);
     }
 
     /**

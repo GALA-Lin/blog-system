@@ -4,7 +4,7 @@ import com.blog.DTO.notification.*;
 import com.blog.VO.notification.*;
 import com.blog.common.PageResult;
 import com.blog.common.Result;
-import com.blog.module.notification.service.INotificationService;
+import com.blog.module.notification.service.NotificationService;
 import com.blog.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,15 +26,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationController {
 
-    private final INotificationService notificationService;
+    private final NotificationService notificationService;
 
     // ========== 查询通知 ==========
 
-    /**
-     * 获取我的通知列表
-     * @param queryDTO
-     * @return
-     */
     @Operation(summary = "获取我的通知列表")
     @GetMapping
     @PreAuthorize("isAuthenticated()")
@@ -44,11 +39,6 @@ public class NotificationController {
         return Result.success(notifications);
     }
 
-    /**
-     * 获取通知详情
-     * @param id 通知ID
-     * @return 通知详情
-     */
     @Operation(summary = "获取通知详情")
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
@@ -58,9 +48,6 @@ public class NotificationController {
         return Result.success(notification);
     }
 
-    /**
-     * 获取通知未读数量
-     */
     @Operation(summary = "获取未读通知数量")
     @GetMapping("/unread-count")
     @PreAuthorize("isAuthenticated()")
@@ -70,11 +57,7 @@ public class NotificationController {
         return Result.success(count);
     }
 
-    /**
-     * 获取通知统计
-     * @return 通知统计
-     */
-    @Operation(summary = "获取通知统计")
+    @Operation(summary = "获取通知统计信息")
     @GetMapping("/stats")
     @PreAuthorize("isAuthenticated()")
     public Result<NotificationStatVO> getNotificationStats() {
@@ -82,7 +65,6 @@ public class NotificationController {
         NotificationStatVO stats = notificationService.getNotificationStats(userId);
         return Result.success(stats);
     }
-
 
     // ========== 标记已读 ==========
 

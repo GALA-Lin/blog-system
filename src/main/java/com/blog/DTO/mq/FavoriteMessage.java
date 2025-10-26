@@ -1,5 +1,6 @@
 package com.blog.DTO.mq;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,6 +25,7 @@ public class FavoriteMessage implements Serializable {
     private Long postId;
     private Long folderId;
     private String action; // FAVORITE, UNFAVORITE
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime timestamp;
 
 }
