@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = true)
 @TableName("posts")
 public class Post extends BaseEntity {
+
     private Long userId;
 
     private String title;
