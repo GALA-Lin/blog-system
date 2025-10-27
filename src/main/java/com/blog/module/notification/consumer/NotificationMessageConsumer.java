@@ -83,6 +83,13 @@ public class NotificationMessageConsumer {
     private void handleCommentLikeNotification(NotificationMessage message) {
         User sender = userMapper.selectById(message.getSenderId());
         if (sender == null) {
+            log.warn("【通知处理】发送者不存在: {}", message.getSenderId());
+            return;
+        }
+        Long postId = extractPostId(message.getContent());
+        Post post = postId != null ? postMapper.selectById(postId) : null;
+        if (post == null) {
+            log.warn("【通知处理】文章不存在: postId={}", postId);
             return;
         }
 
@@ -139,16 +146,15 @@ public class NotificationMessageConsumer {
      * 处理评论通知
      */
     private void handleCommentNotification(NotificationMessage message) {
+        // ✅ 修复：只查询 sender，用于生成通知内容
         User sender = userMapper.selectById(message.getSenderId());
         if (sender == null) {
             log.warn("【通知处理】发送者不存在: {}", message.getSenderId());
             return;
         }
 
-        // 解析 postId
         Long postId = extractPostId(message.getContent());
         Post post = postId != null ? postMapper.selectById(postId) : null;
-
         if (post == null) {
             log.warn("【通知处理】文章不存在: postId={}", postId);
             return;
@@ -166,9 +172,9 @@ public class NotificationMessageConsumer {
         notification.setRelatedId(message.getRelatedId());
         notification.setIsRead(0);
 
-        notificationMapper.insert(notification);
 
-        // 更新 Redis 计数
+        notificationMapper.insert(notification);
+        // Redis 未读计数
         incrementUnreadCount(message.getRecipientId(), "COMMENT");
 
         log.info("【数据库保存】评论通知创建成功: recipientId={}, commentId={}",
