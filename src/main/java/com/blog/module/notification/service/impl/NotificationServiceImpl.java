@@ -199,7 +199,6 @@ public class NotificationServiceImpl implements NotificationService {
             notification.setContent(dto.getContent());
             notification.setLinkUrl(dto.getLinkUrl());
             notification.setIsRead(0);
-            notification.setSender(userMapper.selectById(senderId));
 
             notificationMapper.insert(notification);
 
