@@ -146,7 +146,7 @@ public class NotificationMessageConsumer {
      * 处理评论通知
      */
     private void handleCommentNotification(NotificationMessage message) {
-        // ✅ 修复：只查询 sender，用于生成通知内容
+        // 修复：只查询 sender，用于生成通知内容
         User sender = userMapper.selectById(message.getSenderId());
         if (sender == null) {
             log.warn("【通知处理】发送者不存在: {}", message.getSenderId());
