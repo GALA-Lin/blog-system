@@ -71,7 +71,7 @@ GPL-3.0 License
 
 ### :date:数据库设计
 
-![图表 - blog_system](D:\blog-system\ReadMe.assets\图表 - blog_system.svg)
+![图表 - blog_system](ReadMe.assets\图表 - blog_system.svg)
 
 
 
