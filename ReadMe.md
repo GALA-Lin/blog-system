@@ -51,7 +51,9 @@ GPL-3.0 License
 | Spring Security + JWT | -     | 认证授权    |
 | Knife4j               | 4.x   | API 文档    |
 
-## 🏗️ 系统架构
+## :classical_building: 系统架构
+
+### :building_construction: 系统架构图​
 
 ```
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
@@ -71,9 +73,7 @@ GPL-3.0 License
 
 ### :date:数据库设计
 
-![图表 - blog_system](ReadMe.assets\图表 - blog_system.svg)
-
-
+![blog_system_DB](ReadMe.assets\blog_system_DB.png)
 
 ## 🔥 核心功能
 
