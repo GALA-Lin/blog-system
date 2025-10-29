@@ -36,15 +36,6 @@ GPL-3.0 License
 - **幂等性保证** - MQ 消息防重，DuplicateKeyException 捕获
 - **批量预热机制** - 首次批量查询触发缓存预热，标记已初始化，后续查询直接走 Redis
 
-## :memo: TODO
-
-### :pushpin:实时通知
-
-- :incoming_envelope:采用WebSocket,完成低延时高频率的通知交互
-- :no_entry_sign: 由于备案麻烦,用户间聊天交互功能不在计划内
-
-## Redis
-
 
 
 ## 📦 技术栈
@@ -75,6 +66,14 @@ GPL-3.0 License
         │  缓存层  │ │ 消息队列 │ │对象存储 │
         └─────────┘ └─────────┘ └─────────┘
 ```
+
+
+
+### :date:数据库设计
+
+![图表 - blog_system](D:\blog-system\ReadMe.assets\图表 - blog_system.svg)
+
+
 
 ## 🔥 核心功能
 
