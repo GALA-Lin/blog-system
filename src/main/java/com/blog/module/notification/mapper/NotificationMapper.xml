@@ -15,12 +15,12 @@
         <result property="isRead" column="is_read"/>
         <result property="createdAt" column="created_at"/>
 
-        <!-- 发送者信息 - 修复列名映射 -->
+        <!-- 发送者信息 -->
         <association property="sender" javaType="com.blog.entity.User">
-            <id property="id" column="sender_id"/>
-            <result property="username" column="username"/>
-            <result property="nickname" column="nickname"/>
-            <result property="avatarUrl" column="avatar_url"/>
+            <id column="sender_id" property="id"/>
+            <result column="sender_username" property="username"/>
+            <result column="sender_nickname" property="nickname"/>
+            <result column="sender_avatar" property="avatarUrl"/>
         </association>
     </resultMap>
     <!-- 获取用户通知列表（带发送者信息） -->
