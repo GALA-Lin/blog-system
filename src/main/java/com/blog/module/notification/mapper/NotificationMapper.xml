@@ -17,10 +17,10 @@
 
         <!-- 发送者信息 -->
         <association property="sender" javaType="com.blog.entity.User">
-            <id property="id" column="sender_id"/>
-            <result property="username" column="sender_username"/>
-            <result property="nickname" column="sender_nickname"/>
-            <result property="avatarUrl" column="sender_avatar"/>
+            <id column="sender_id" property="id"/>
+            <result column="sender_username" property="username"/>
+            <result column="sender_nickname" property="nickname"/>
+            <result column="sender_avatar" property="avatarUrl"/>
         </association>
     </resultMap>
     <!-- 获取用户通知列表（带发送者信息） -->
@@ -57,4 +57,5 @@
             </otherwise>
         </choose>
     </select>
+
 </mapper>
