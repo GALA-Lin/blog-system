@@ -73,7 +73,7 @@ GPL-3.0 License
 
 ### :date:数据库设计
 
-![blog_system_DB](ReadMe.assets\blog_system_DB.png)
+![blog_system_DB](ReadMe.assets/blog_system_DB.png)
 
 ## 🔥 核心功能
 
