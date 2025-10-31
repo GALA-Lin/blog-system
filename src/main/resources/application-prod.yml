@@ -1,0 +1,235 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /api
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  application:
+    name: blog-system
+
+
+  # Database Configuration
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://47.109.37.230:3306/blog?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: blog
+    password: "CRBsheK3ycYKckfH"
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      filters: stat,wall
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+      web-stat-filter:
+        enabled: true
+        url-pattern: /*
+        exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        reset-enable: false
+        login-username: admin
+        login-password: admin
+
+  # Redis Configuration
+  data:
+    redis:
+      host: 47.109.37.230
+      port: 6379
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
+  # RabbitMQ Configuration
+  rabbitmq:
+    host: 47.109.37.230
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+    listener:
+      simple:
+        acknowledge-mode: manual
+        concurrency: 3
+        max-concurrency: 10
+        prefetch: 1
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+      message-converter: jackson2
+
+  # File Upload Configuration
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 20MB
+
+  # Jackson Configuration
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+# MyBatis-Plus Configuration
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+    banner: false
+  mapper-locations: classpath*:com/blog/module/**/mapper/*.xml
+  type-aliases-package: com.blog.entity
+
+# MinIO Configuration
+minio:
+  endpoint: http://47.109.37.230:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket-name: blog-system
+  # Public access URL (for file access)
+  public-endpoint: http://47.109.37.230:9000
+
+# JWT Configuration
+jwt:
+  secret: f769c3cf25fc58e8d3a979f8df34e1f9b870dea6bd6c76886ba715d1e50d9fcc
+  expiration: 604800000 # 7 days in milliseconds
+  header: Authorization
+  prefix: "Bearer "# JWT Token prefix
+
+# Blog System Custom Configuration
+blog:
+  # File Upload
+  upload:
+    path: /uploads
+    max-size: 10485760 # 10MB
+    allowed-extensions:
+      - jpg
+      - jpeg
+      - png
+      - gif
+      - pdf
+      - doc
+      - docx
+      - txt
+      - md
+
+  # Markdown
+  markdown:
+    enable-gfm: true # GitHub Flavored Markdown
+    enable-tables: true
+    enable-heading-anchor: true
+
+  # Comment
+  comment:
+    enable-review: false # Require admin approval
+    max-length: 500
+    enable-nested: true # Allow nested replies
+    max-depth: 3 # Maximum nesting depth
+
+  # Security
+  security:
+    password:
+      min-length: 8
+      require-uppercase: true
+      require-lowercase: true
+      require-digit: true
+      require-special-char: false
+
+    login:
+      max-attempts: 5 # Max login attempts
+      lockout-duration: 1800 # 30 minutes in seconds
+
+  # Cache
+  cache:
+    default-ttl: 3600 # 1 hour
+    hot-posts-ttl: 600 # 10 minutes
+    user-info-ttl: 1800 # 30 minutes
+
+# Knife4j (Swagger) Configuration
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  group-configs:
+    - group: 'Auth API'
+      paths-to-match: '/auth/**'
+    - group: 'Post API'
+      paths-to-match: '/posts/**'
+    - group: 'Comment API'
+      paths-to-match: '/comments/**'
+    - group: 'User API'
+      paths-to-match: '/users/**'
+    - group: 'Like API'
+      paths-to-match: '/likes/**'
+    - group: 'Favorite API'
+      paths-to-match: '/favorites/**'
+    - group: 'Notification API'
+      paths-to-match: '/notifications/**'
+    - group: 'File API'
+      paths-to-match: '/files/**'
+
+knife4j:
+  enable: true
+  setting:
+    language: zh-CN
+    swagger-model-name: 实体类列表
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.blog: DEBUG
+    com.blog.mapper: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
+  file:
+    name: logs/blog-system.log
+    max-size: 10MB
+    max-history: 30
+
+# Management Endpoints (Actuator)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
