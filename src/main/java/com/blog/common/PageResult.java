@@ -91,8 +91,17 @@ public class PageResult<T> {
         result.setTotal(total);
         result.setSize(size);
         result.setCurrent(current);
-        result.setPages((total + size - 1) / size);
+
+        long pages = (total + size - 1) / size;
+        result.setPages(pages);
         result.setRecords(records);
+
+        // 补充缺失字段的赋值
+        result.setPageNum(current.intValue()); // current（Long）转 pageNum（Integer）
+        result.setPageSize(size.intValue());   // size（Long）转 pageSize（Integer）
+        result.setTotalPages((int) pages);     // 总页数同步
+        result.setHasPrevious(current > 1);    // 是否有上一页（当前页>1）
+        result.setHasNext(current < pages);    // 是否有下一页（当前页<总页数）
         return result;
     }
 
