@@ -4,10 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.entity.Comment;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -31,6 +28,7 @@ public interface CommentMapper extends BaseMapper<Comment> {
             "INNER JOIN users u ON c.user_id = u.id " +
             "LEFT JOIN users ru ON c.reply_to_user_id = ru.id " +
             "WHERE c.id = #{commentId} AND c.status != -1")
+    @ResultMap("CommentWithAuthorMap")
     Comment selectCommentWithAuthor(@Param("commentId") Long commentId);
 
     /**

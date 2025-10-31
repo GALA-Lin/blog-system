@@ -52,6 +52,8 @@ public class FileUploadServiceImpl implements FileUploadService{
             "application/pdf",
             "application/msword",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/octet-stream",
             "text/plain",
             "text/markdown"
     );
@@ -63,6 +65,18 @@ public class FileUploadServiceImpl implements FileUploadService{
     @Override
     @Transactional(rollbackFor = Exception.class)
     public FileUploadDTO uploadFile(MultipartFile file, Long userId, String category) {
+        String contentType = file.getContentType();
+        if ("IMAGE".equals(category)) {
+            // 验证图片类型（如image/jpeg）
+            if (!ALLOWED_IMAGE_TYPES.contains(contentType)) {
+                throw new BusinessException("不支持的图片类型: " + contentType);
+            }
+        } else if ("DOCUMENT".equals(category)) {
+            // 验证文档类型
+            if (!ALLOWED_DOCUMENT_TYPES.contains(contentType)) {
+                throw new BusinessException("不支持的文件类型: " + contentType);
+            }
+        }
         // 1. 验证文件
         validateFile(file, category);
 
