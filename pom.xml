@@ -14,7 +14,7 @@
 
     <groupId>com.blog</groupId>
     <artifactId>blog-system</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <name>blog-system</name>
     <description>Modern Blog System with Spring Boot 3</description>
 

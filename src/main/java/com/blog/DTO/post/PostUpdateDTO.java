@@ -15,7 +15,6 @@ import java.util.List;
 @Data
 public class PostUpdateDTO {
 
-    @NotNull(message = "文章ID不能为空")
     private Long id;
 
     @Size(max = 200, message = "文章标题最大长度为200")
