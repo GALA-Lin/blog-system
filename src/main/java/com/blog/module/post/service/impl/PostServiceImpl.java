@@ -82,10 +82,27 @@ public class PostServiceImpl implements PostService {
         return post.getId();
     }
     private String generateSlug(String title) {
-        return title.toLowerCase()
-                .replaceAll("[^a-z0-9\\s-]", "")
-                .replaceAll("\\s+", "-")
-                .substring(0, Math.min(title.length(), 50));
+        // 保留中文、字母、数字、横线、下划线，其他字符替换为横线
+        String processed = title.replaceAll("[^\\u4e00-\\u9fa5a-zA-Z0-9_-]", "-")
+                // 多个横线合并为一个
+                .replaceAll("-+", "-")
+                // 移除首尾横线
+                .replaceAll("^-|-$", "");
+
+        // 安全截取（避免过长，比如最多100个字符）
+        int maxLength = Math.min(processed.length(), 50);
+        String baseSlug = processed.substring(0, maxLength);
+
+        // 确保唯一性（和之前逻辑一致）
+        return ensureUniqueSlug(baseSlug);
+    }
+    private String ensureUniqueSlug(String baseSlug) {
+        if (!postMapper.existsBySlug(baseSlug)) {
+            return baseSlug;
+        }
+        // 重复时追加时间戳或随机数（示例用时间戳，避免并发冲突）
+        long timestamp = System.currentTimeMillis() / 1000; // 秒级时间戳
+        return baseSlug + "-" + timestamp;
     }
     private void saveCategoriesForPost(Long postId, List<Long> categoryIds) {
         for (Long categoryId : categoryIds) {
