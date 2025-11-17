@@ -36,25 +36,32 @@ public interface PostMapper extends BaseMapper<Post> {
      * 增加文章点赞数
      */
     @Update("UPDATE posts SET like_count = like_count + 1 WHERE id = #{postId}")
-    int incrementLikeCount(@Param("postId") Long postId);
+    void incrementLikeCount(@Param("postId") Long postId);
 
     /**
      * 减少文章点赞数
      */
     @Update("UPDATE posts SET like_count = like_count - 1 WHERE id = #{postId} AND like_count > 0")
-    int decrementLikeCount(@Param("postId") Long postId);
+    void decrementLikeCount(@Param("postId") Long postId);
 
 
     /**
      * 增加文章收藏数
      */
     @Update("UPDATE posts SET favorite_count = favorite_count + 1 WHERE id = #{postId}")
-    int incrementFavoriteCount(@Param("postId") Long postId);
+    void incrementFavoriteCount(@Param("postId") Long postId);
 
     /**
      * 减少文章收藏数
      */
     @Update("UPDATE posts SET favorite_count = favorite_count - 1 WHERE id = #{postId} AND favorite_count > 0")
-    int decrementFavoriteCount(@Param("postId") Long postId);
+    void decrementFavoriteCount(@Param("postId") Long postId);
 
+    /**
+     * 判断Slug是否存在
+     */
+    @Select("SELECT COUNT(1) > 0 " +
+            "FROM posts " +
+            "WHERE slug = #{baseSlug}")
+    boolean existsBySlug(String baseSlug);
 }
