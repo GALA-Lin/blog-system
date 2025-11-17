@@ -20,37 +20,37 @@ public class RegisterDTO {
      * 密码长度8-32，必须包含大小写字母和数字
      * 确认密码
      */
-    @NotBlank(message = "Username cannot be empty")
-    @Size(min = 3, max = 20, message = "Username length must be between 3-20")
+    @NotBlank(message = "用户名不能为空")
+    @Size(min = 3, max = 20, message = "用户名长度必须在3-20之间")
     @Pattern(regexp = "^[a-zA-Z0-9_-]+$",
-            message = "Username can only contain letters, numbers, underscores and hyphens")
-    @Schema(description = "Username", example = "testuser")
+            message = "用户名只能包含字母、数字、下划线和连字符")
+    @Schema(description = "Username", example = "test_user")
     private String username;
 
-    @NotBlank(message = "Email cannot be empty")
-    @Email(message = "Invalid email format")
+    @NotBlank(message = "邮箱不能为空")
+    @Email(message = "非法的邮箱格式")
     @Schema(description = "Email", example = "test@example.com")
     private String email;
 
-    @NotBlank(message = "Password cannot be empty")
-    @Size(min = 8, max = 32, message = "Password length must be between 8-32")
+    @NotBlank(message = "密码不能为空")
+    @Size(min = 8, max = 32, message = "密码长度必须在8-32之间")
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$",
-            message = "Password must contain uppercase, lowercase and digit")
+            message = "密码必须包含大小写字母和数字")
     @Schema(description = "Password", example = "Test@123")
     private String password;
 
-    @NotBlank(message = "Confirm password cannot be empty")
-    @Schema(description = "Confirm Password", example = "Test@123")
+    @NotBlank(message = "验证密码不能为空")
+    @Schema(description = "验证密码", example = "Test@123")
     private String confirmPassword;
 
-    @Size(max = 50, message = "Nickname length cannot exceed 50")
-    @Schema(description = "Nickname", example = "Test User")
+    @Size(max = 50, message = "昵称长度不能超过50个字符")
+    @Schema(description = "昵称", example = "Test User")
     private String nickname;
 
     /**
      * 验证前后密码是否匹配
      */
-    @AssertTrue(message = "Passwords do not match")
+    @AssertTrue(message = "两次输入的密码不一致")
     public boolean isPasswordMatch() {
         if (password == null || confirmPassword == null) {
             return false;
